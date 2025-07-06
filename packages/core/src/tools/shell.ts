@@ -184,9 +184,11 @@ Process Group PGID: Process group started or \`(none)\``,
 
     const commandsToValidate = command.split(/&&|\|\||\||;/).map(normalize);
 
+    const blockedCommandsArr = [...blockedCommands];
+
     for (const cmd of commandsToValidate) {
       // 2. Check if the command is on the blocklist.
-      const isBlocked = [...blockedCommands].some((blocked) =>
+      const isBlocked = blockedCommandsArr.some((blocked) =>
         isPrefixedBy(cmd, blocked),
       );
       if (isBlocked) {
@@ -199,8 +201,9 @@ Process Group PGID: Process group started or \`(none)\``,
       // 3. If in strict allow-list mode, check if the command is permitted.
       const isStrictAllowlist =
         hasSpecificAllowedCommands && !isWildcardAllowed;
+      const allowedCommandsArr = [...allowedCommands];
       if (isStrictAllowlist) {
-        const isAllowed = [...allowedCommands].some((allowed) =>
+        const isAllowed = allowedCommandsArr.some((allowed) =>
           isPrefixedBy(cmd, allowed),
         );
         if (!isAllowed) {
