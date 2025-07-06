@@ -112,7 +112,7 @@ Process Group PGID: Process group started or \`(none)\``,
    * the tool's configuration including allowlists and blocklists.
    *
    * @param command The shell command string to validate
-   * @returns True if the command is allowed to execute, false otherwise
+   * @returns An object with 'allowed' boolean and optional 'reason' string if not allowed
    */
   isCommandAllowed(command: string): { allowed: boolean; reason?: string } {
     // 0. Disallow command substitution
@@ -222,7 +222,13 @@ Process Group PGID: Process group started or \`(none)\``,
   validateToolParams(params: ShellToolParams): string | null {
     const commandCheck = this.isCommandAllowed(params.command);
     if (!commandCheck.allowed) {
-      return commandCheck.reason || `Command is not allowed: ${params.command}`;
+      if (!commandCheck.reason) {
+        console.error(
+          'Unexpected: isCommandAllowed returned false without a reason',
+        );
+        return `Command is not allowed: ${params.command}`;
+      }
+      return commandCheck.reason;
     }
     if (
       !SchemaValidator.validate(
