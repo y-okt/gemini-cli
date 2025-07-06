@@ -186,10 +186,10 @@ Process Group PGID: Process group started or \`(none)\``,
 
     for (const cmd of commandsToValidate) {
       // 2. Check if the command is on the blocklist.
-      const blockedCommand = [...blockedCommands].find((blocked) =>
+      const isBlocked = [...blockedCommands].some((blocked) =>
         isPrefixedBy(cmd, blocked),
       );
-      if (blockedCommand) {
+      if (isBlocked) {
         return {
           allowed: false,
           reason: `Command '${cmd}' is blocked by configuration`,
