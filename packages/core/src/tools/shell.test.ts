@@ -398,4 +398,60 @@ describe('ShellTool', () => {
       "Command 'rm -rf /' is not in the allowed commands list",
     );
   });
+
+  describe('Directory Traversal Prevention', () => {
+    it('should block directory parameter with parent directory references', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: '../sensitive',
+      });
+
+      expect(result).toBe(
+        'Directory cannot contain parent directory references (..)',
+      );
+    });
+
+    it('should block directory parameter with embedded parent directory references', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: 'subdir/../../sensitive',
+      });
+
+      expect(result).toBe(
+        'Directory cannot contain parent directory references (..)',
+      );
+    });
+
+    it('should block absolute directory paths', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: '/etc/passwd',
+      });
+
+      expect(result).toBe(
+        'Directory cannot be absolute. Must be relative to the project root directory.',
+      );
+    });
+  });
 });
