@@ -14,7 +14,7 @@ vi.mock('fs', () => ({
   default: {
     existsSync: vi.fn(),
     realpathSync: vi.fn(),
-  }
+  },
 }));
 
 describe('ShellTool', () => {
@@ -423,7 +423,7 @@ describe('ShellTool', () => {
 
       // Mock that the directory exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath to simulate traversal outside project
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -436,7 +436,9 @@ describe('ShellTool', () => {
         directory: '../',
       });
 
-      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
+      expect(result).toBe(
+        'Directory traversal is not allowed. Path must be within the project root.',
+      );
     });
 
     it('should block traversal to system directories like /etc', () => {
@@ -449,7 +451,7 @@ describe('ShellTool', () => {
 
       // Mock that /etc exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath to simulate traversal to /etc
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -462,7 +464,9 @@ describe('ShellTool', () => {
         directory: '../../etc',
       });
 
-      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
+      expect(result).toBe(
+        'Directory traversal is not allowed. Path must be within the project root.',
+      );
     });
 
     it('should allow directories within project root', () => {
@@ -475,7 +479,7 @@ describe('ShellTool', () => {
 
       // Mock that the subdirectory exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath for valid subdirectory
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -501,7 +505,7 @@ describe('ShellTool', () => {
 
       // Mock that current directory exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath for current directory
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -527,7 +531,7 @@ describe('ShellTool', () => {
 
       // Mock that directory exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath: src/../ resolves to project root
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -553,7 +557,7 @@ describe('ShellTool', () => {
 
       // Mock that symlink exists
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+
       // Mock realpath: symlink resolves to /etc
       vi.mocked(fs.realpathSync).mockImplementation((path) => {
         if (path === '/project/root') return '/project/root';
@@ -566,7 +570,9 @@ describe('ShellTool', () => {
         directory: 'evil-symlink',
       });
 
-      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
+      expect(result).toBe(
+        'Directory traversal is not allowed. Path must be within the project root.',
+      );
     });
 
     it('should check directory existence before traversal check', () => {

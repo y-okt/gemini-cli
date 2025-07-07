@@ -259,12 +259,15 @@ Process Group PGID: Process group started or \`(none)\``,
       const realRootDir = fs.realpathSync(rootDir);
       const realResolvedDir = fs.realpathSync(resolvedDir);
 
-      if (!realResolvedDir.startsWith(realRootDir + path.sep) && realResolvedDir !== realRootDir) {
+      if (
+        !realResolvedDir.startsWith(realRootDir + path.sep) &&
+        realResolvedDir !== realRootDir
+      ) {
         return 'Directory traversal is not allowed. Path must be within the project root.';
       }
-        }
-        return null;
-      }
+    }
+    return null;
+  }
 
   async shouldConfirmExecute(
     params: ShellToolParams,
