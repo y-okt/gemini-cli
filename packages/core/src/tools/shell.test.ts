@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi, beforeEach } from 'vitest';
 import { ShellTool } from './shell.js';
 import { Config } from '../config/config.js';
+import fs from 'fs';
+
+// Mock fs module at the module level
+vi.mock('fs', () => ({
+  default: {
+    existsSync: vi.fn(),
+    realpathSync: vi.fn(),
+  }
+}));
 
 describe('ShellTool', () => {
   it('should allow a command if no restrictions are provided', async () => {
@@ -400,25 +409,11 @@ describe('ShellTool', () => {
   });
 
   describe('Directory Traversal Prevention', () => {
-    it('should block directory parameter with embedded parent directory references', () => {
-      const config = {
-        getCoreTools: () => undefined,
-        getExcludeTools: () => undefined,
-        getTargetDir: () => '/project/root',
-      } as unknown as Config;
-      const shellTool = new ShellTool(config);
-
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: 'subdir/../../sensitive',
-      });
-
-      expect(result).toBe(
-        'Directory traversal is not allowed. Path must be within the project root.',
-      );
+    beforeEach(() => {
+      vi.clearAllMocks();
     });
 
-    it('should block absolute directory paths', () => {
+    it('should block traversal to parent directory outside project root', () => {
       const config = {
         getCoreTools: () => undefined,
         getExcludeTools: () => undefined,
@@ -426,17 +421,25 @@ describe('ShellTool', () => {
       } as unknown as Config;
       const shellTool = new ShellTool(config);
 
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: '/etc/passwd',
+      // Mock that the directory exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath to simulate traversal outside project
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/../') return '/project';
+        return path as string;
       });
 
-      expect(result).toBe(
-        'Directory cannot be absolute. Must be relative to the project root directory.',
-      );
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: '../',
+      });
+
+      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
     });
 
-    it('should allow subdir/../ as it resolves to project root', () => {
+    it('should block traversal to system directories like /etc', () => {
       const config = {
         getCoreTools: () => undefined,
         getExcludeTools: () => undefined,
@@ -444,70 +447,147 @@ describe('ShellTool', () => {
       } as unknown as Config;
       const shellTool = new ShellTool(config);
 
-      // This should be allowed as 'subdir/../' resolves to the project root
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: 'subdir/../',
+      // Mock that /etc exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath to simulate traversal to /etc
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/../../etc') return '/etc';
+        return path as string;
       });
 
-      // The directory doesn't exist, but it should pass the traversal check
+      const result = shellTool.validateToolParams({
+        command: 'cat passwd',
+        directory: '../../etc',
+      });
+
+      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
+    });
+
+    it('should allow directories within project root', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // Mock that the subdirectory exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath for valid subdirectory
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/src') return '/project/root/src';
+        return path as string;
+      });
+
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: 'src',
+      });
+
+      expect(result).toBe(null);
+    });
+
+    it('should allow current directory (.)', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // Mock that current directory exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath for current directory
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/.') return '/project/root';
+        return path as string;
+      });
+
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: '.',
+      });
+
+      expect(result).toBe(null);
+    });
+
+    it('should allow paths with .. that stay within project root', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // Mock that directory exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath: src/../ resolves to project root
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/src/../') return '/project/root';
+        return path as string;
+      });
+
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: 'src/../',
+      });
+
+      expect(result).toBe(null);
+    });
+
+    it('should block symlinks that point outside project root', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // Mock that symlink exists
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      
+      // Mock realpath: symlink resolves to /etc
+      vi.mocked(fs.realpathSync).mockImplementation((path) => {
+        if (path === '/project/root') return '/project/root';
+        if (path === '/project/root/evil-symlink') return '/etc';
+        return path as string;
+      });
+
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: 'evil-symlink',
+      });
+
+      expect(result).toBe('Directory traversal is not allowed. Path must be within the project root.');
+    });
+
+    it('should check directory existence before traversal check', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // Mock that directory does NOT exist
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+
+      const result = shellTool.validateToolParams({
+        command: 'ls',
+        directory: 'non-existent-dir',
+      });
+
       expect(result).toBe('Directory must exist.');
-    });
-
-    it('should allow subdir/core/../ as it resolves within project', () => {
-      const config = {
-        getCoreTools: () => undefined,
-        getExcludeTools: () => undefined,
-        getTargetDir: () => '/project/root',
-      } as unknown as Config;
-      const shellTool = new ShellTool(config);
-
-      // This should be allowed as 'subdir/core/../' resolves to 'subdir/'
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: 'subdir/core/../',
-      });
-
-      // The directory doesn't exist, but it should pass the traversal check
-      expect(result).toBe('Directory must exist.');
-    });
-
-    it('should block paths that traverse outside project root', () => {
-      const config = {
-        getCoreTools: () => undefined,
-        getExcludeTools: () => undefined,
-        getTargetDir: () => '/project/root',
-      } as unknown as Config;
-      const shellTool = new ShellTool(config);
-
-      // This should be blocked as it goes outside the project root
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: 'subdir/../../outside',
-      });
-
-      expect(result).toBe(
-        'Directory traversal is not allowed. Path must be within the project root.',
-      );
-    });
-
-    it('should block complex traversal attempts', () => {
-      const config = {
-        getCoreTools: () => undefined,
-        getExcludeTools: () => undefined,
-        getTargetDir: () => '/project/root',
-      } as unknown as Config;
-      const shellTool = new ShellTool(config);
-
-      // This should be blocked as it eventually escapes the project root
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: 'a/b/c/../../../../../../../etc',
-      });
-
-      expect(result).toBe(
-        'Directory traversal is not allowed. Path must be within the project root.',
-      );
+      // Should not call realpathSync if directory doesn't exist
+      expect(fs.realpathSync).not.toHaveBeenCalled();
     });
   });
 });

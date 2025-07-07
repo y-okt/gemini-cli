@@ -251,20 +251,20 @@ Process Group PGID: Process group started or \`(none)\``,
       const rootDir = path.resolve(this.config.getTargetDir());
       const resolvedDir = path.resolve(rootDir, params.directory);
 
-      if (!resolvedDir.startsWith(rootDir + path.sep) && resolvedDir !== rootDir) {
-        return 'Directory traversal is not allowed. Path must be within the project root.';
-      }
-
-      const directory = path.resolve(
-        this.config.getTargetDir(),
-        params.directory,
-      );
-      if (!fs.existsSync(directory)) {
+      if (!fs.existsSync(resolvedDir)) {
         return 'Directory must exist.';
       }
-    }
-    return null;
-  }
+
+      // Resolve symlinks to prevent traversal attacks.
+      const realRootDir = fs.realpathSync(rootDir);
+      const realResolvedDir = fs.realpathSync(resolvedDir);
+
+      if (!realResolvedDir.startsWith(realRootDir + path.sep) && realResolvedDir !== realRootDir) {
+        return 'Directory traversal is not allowed. Path must be within the project root.';
+      }
+        }
+        return null;
+      }
 
   async shouldConfirmExecute(
     params: ShellToolParams,
