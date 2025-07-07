@@ -407,8 +407,9 @@ describe('ShellTool', () => {
       "Command 'rm -rf /' is not in the allowed commands list",
     );
   });
+});
 
-  describe('Directory Traversal Prevention', () => {
+describe('Directory Traversal Prevention', () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
@@ -596,4 +597,3 @@ describe('ShellTool', () => {
       expect(fs.realpathSync).not.toHaveBeenCalled();
     });
   });
-});
