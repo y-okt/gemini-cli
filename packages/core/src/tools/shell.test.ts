@@ -400,24 +400,6 @@ describe('ShellTool', () => {
   });
 
   describe('Directory Traversal Prevention', () => {
-    it('should block directory parameter with parent directory references', () => {
-      const config = {
-        getCoreTools: () => undefined,
-        getExcludeTools: () => undefined,
-        getTargetDir: () => '/project/root',
-      } as unknown as Config;
-      const shellTool = new ShellTool(config);
-
-      const result = shellTool.validateToolParams({
-        command: 'ls -la',
-        directory: '../sensitive',
-      });
-
-      expect(result).toBe(
-        'Directory cannot contain parent directory references (..)',
-      );
-    });
-
     it('should block directory parameter with embedded parent directory references', () => {
       const config = {
         getCoreTools: () => undefined,
@@ -432,7 +414,7 @@ describe('ShellTool', () => {
       });
 
       expect(result).toBe(
-        'Directory cannot contain parent directory references (..)',
+        'Directory traversal is not allowed. Path must be within the project root.',
       );
     });
 
@@ -451,6 +433,80 @@ describe('ShellTool', () => {
 
       expect(result).toBe(
         'Directory cannot be absolute. Must be relative to the project root directory.',
+      );
+    });
+
+    it('should allow subdir/../ as it resolves to project root', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // This should be allowed as 'subdir/../' resolves to the project root
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: 'subdir/../',
+      });
+
+      // The directory doesn't exist, but it should pass the traversal check
+      expect(result).toBe('Directory must exist.');
+    });
+
+    it('should allow subdir/core/../ as it resolves within project', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // This should be allowed as 'subdir/core/../' resolves to 'subdir/'
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: 'subdir/core/../',
+      });
+
+      // The directory doesn't exist, but it should pass the traversal check
+      expect(result).toBe('Directory must exist.');
+    });
+
+    it('should block paths that traverse outside project root', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // This should be blocked as it goes outside the project root
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: 'subdir/../../outside',
+      });
+
+      expect(result).toBe(
+        'Directory traversal is not allowed. Path must be within the project root.',
+      );
+    });
+
+    it('should block complex traversal attempts', () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+        getTargetDir: () => '/project/root',
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+
+      // This should be blocked as it eventually escapes the project root
+      const result = shellTool.validateToolParams({
+        command: 'ls -la',
+        directory: 'a/b/c/../../../../../../../etc',
+      });
+
+      expect(result).toBe(
+        'Directory traversal is not allowed. Path must be within the project root.',
       );
     });
   });

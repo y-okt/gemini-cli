@@ -248,9 +248,13 @@ Process Group PGID: Process group started or \`(none)\``,
       if (path.isAbsolute(params.directory)) {
         return 'Directory cannot be absolute. Must be relative to the project root directory.';
       }
-      if (params.directory.includes('..')) {
-        return 'Directory cannot contain parent directory references (..)';
+      const rootDir = path.resolve(this.config.getTargetDir());
+      const resolvedDir = path.resolve(rootDir, params.directory);
+
+      if (!resolvedDir.startsWith(rootDir + path.sep) && resolvedDir !== rootDir) {
+        return 'Directory traversal is not allowed. Path must be within the project root.';
       }
+
       const directory = path.resolve(
         this.config.getTargetDir(),
         params.directory,
