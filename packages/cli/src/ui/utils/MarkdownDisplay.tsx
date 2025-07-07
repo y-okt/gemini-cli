@@ -10,6 +10,7 @@ import { Colors } from '../colors.js';
 import { colorizeCode } from './CodeColorizer.js';
 import { TableRenderer } from './TableRenderer.js';
 import { RenderInline } from './InlineMarkdownRenderer.js';
+import { sanitizeLinesForTerminal } from './terminalSanitizer.js';
 
 interface MarkdownDisplayProps {
   text: string;
@@ -290,13 +291,16 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
   const MIN_LINES_FOR_MESSAGE = 1; // Minimum lines to show before the "generating more" message
   const RESERVED_LINES = 2; // Lines reserved for the message itself and potential padding
 
+  // Sanitize content to remove dangerous terminal sequences
+  const sanitizedContent = sanitizeLinesForTerminal(content);
+
   if (isPending && availableTerminalHeight !== undefined) {
     const MAX_CODE_LINES_WHEN_PENDING = Math.max(
       0,
       availableTerminalHeight - CODE_BLOCK_PADDING * 2 - RESERVED_LINES,
     );
 
-    if (content.length > MAX_CODE_LINES_WHEN_PENDING) {
+    if (sanitizedContent.length > MAX_CODE_LINES_WHEN_PENDING) {
       if (MAX_CODE_LINES_WHEN_PENDING < MIN_LINES_FOR_MESSAGE) {
         // Not enough space to even show the message meaningfully
         return (
@@ -305,7 +309,10 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
           </Box>
         );
       }
-      const truncatedContent = content.slice(0, MAX_CODE_LINES_WHEN_PENDING);
+      const truncatedContent = sanitizedContent.slice(
+        0,
+        MAX_CODE_LINES_WHEN_PENDING,
+      );
       const colorizedTruncatedCode = colorizeCode(
         truncatedContent.join('\n'),
         lang,
@@ -321,7 +328,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
     }
   }
 
-  const fullContent = content.join('\n');
+  const fullContent = sanitizedContent.join('\n');
   const colorizedCode = colorizeCode(
     fullContent,
     lang,

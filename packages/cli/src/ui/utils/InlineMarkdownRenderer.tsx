@@ -8,6 +8,7 @@ import React from 'react';
 import { Text } from 'ink';
 import { Colors } from '../colors.js';
 import stringWidth from 'string-width';
+import { sanitizeForTerminal } from './terminalSanitizer.js';
 
 // Constants for Markdown parsing
 const BOLD_MARKER_LENGTH = 2; // For "**"
@@ -22,17 +23,20 @@ interface RenderInlineProps {
 }
 
 const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
+  // Sanitize the input text to remove dangerous terminal sequences
+  const sanitizedText = sanitizeForTerminal(text);
+
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   const inlineRegex =
     /(\*\*.*?\*\*|\*.*?\*|_.*?_|~~.*?~~|\[.*?\]\(.*?\)|`+.+?`+|<u>.*?<\/u>)/g;
   let match;
 
-  while ((match = inlineRegex.exec(text)) !== null) {
+  while ((match = inlineRegex.exec(sanitizedText)) !== null) {
     if (match.index > lastIndex) {
       nodes.push(
         <Text key={`t-${lastIndex}`}>
-          {text.slice(lastIndex, match.index)}
+          {sanitizedText.slice(lastIndex, match.index)}
         </Text>,
       );
     }
@@ -56,13 +60,21 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
         fullMatch.length > ITALIC_MARKER_LENGTH * 2 &&
         ((fullMatch.startsWith('*') && fullMatch.endsWith('*')) ||
           (fullMatch.startsWith('_') && fullMatch.endsWith('_'))) &&
-        !/\w/.test(text.substring(match.index - 1, match.index)) &&
+        !/\w/.test(sanitizedText.substring(match.index - 1, match.index)) &&
         !/\w/.test(
-          text.substring(inlineRegex.lastIndex, inlineRegex.lastIndex + 1),
+          sanitizedText.substring(
+            inlineRegex.lastIndex,
+            inlineRegex.lastIndex + 1,
+          ),
         ) &&
-        !/\S[./\\]/.test(text.substring(match.index - 2, match.index)) &&
+        !/\S[./\\]/.test(
+          sanitizedText.substring(match.index - 2, match.index),
+        ) &&
         !/[./\\]\S/.test(
-          text.substring(inlineRegex.lastIndex, inlineRegex.lastIndex + 2),
+          sanitizedText.substring(
+            inlineRegex.lastIndex,
+            inlineRegex.lastIndex + 2,
+          ),
         )
       ) {
         renderedNode = (
@@ -136,8 +148,10 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
     lastIndex = inlineRegex.lastIndex;
   }
 
-  if (lastIndex < text.length) {
-    nodes.push(<Text key={`t-${lastIndex}`}>{text.slice(lastIndex)}</Text>);
+  if (lastIndex < sanitizedText.length) {
+    nodes.push(
+      <Text key={`t-${lastIndex}`}>{sanitizedText.slice(lastIndex)}</Text>,
+    );
   }
 
   return <>{nodes.filter((node) => node !== null)}</>;
