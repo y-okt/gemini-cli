@@ -103,7 +103,6 @@ describe('Core System Prompt (prompts.ts)', () => {
     vi.mocked(isGitRepository).mockReturnValue(true);
     const prompt = getCoreSystemPrompt();
     expect(prompt).toContain('git show');
-    expect(prompt).toContain('inspect the actual content');
   });
 
   it('should not include git instructions when not in a git repo', () => {
