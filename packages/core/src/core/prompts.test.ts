@@ -98,6 +98,14 @@ describe('Core System Prompt (prompts.ts)', () => {
     expect(prompt).toMatchSnapshot();
   });
 
+  it('should include git show command for deeper commit introspection', () => {
+    vi.stubEnv('SANDBOX', undefined);
+    vi.mocked(isGitRepository).mockReturnValue(true);
+    const prompt = getCoreSystemPrompt();
+    expect(prompt).toContain('git show');
+    expect(prompt).toContain('inspect the actual content');
+  });
+
   it('should not include git instructions when not in a git repo', () => {
     vi.stubEnv('SANDBOX', undefined);
     vi.mocked(isGitRepository).mockReturnValue(false);
