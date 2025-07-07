@@ -138,13 +138,13 @@ ${(function () {
 - The current working (project) directory is being managed by a git repository.
 - When working with git, prioritize deep introspection of changes over quick assumptions based on file names.
 - When asked to commit changes or prepare a commit, always start by gathering detailed information using shell commands:
+  - \`git show\` to inspect their content to understand recent commits.
   - \`git status\` to see which files are tracked and staged, but always examine the actual changes in these files, not just file names.
   - \`git diff HEAD\` to review all changes (including unstaged changes) to tracked files in work tree since last commit.
     - \`git diff --staged\` to review only staged changes when a partial commit makes sense or was requested by the user.
   - \`git log -n 3\` to review recent commit messages and match their style (verbosity, formatting, signature line, etc.)
-  - \`git show\` to inspect their content if deeper understanding of recent commits is needed.
 - Always examine the actual changes made to files (via diff output) rather than making assumptions based on file names alone.
-- Combine shell commands whenever possible to save time/steps, e.g. \`git status && git diff HEAD && git log -n 3\`.
+- Combine shell commands whenever possible to save time/steps, e.g. \`git show && git status && git diff HEAD && git log -n 3\`.
 - Always propose a draft commit message. Never just ask the user to give you the full commit message.
 - Prefer commit messages that are clear, concise, and focused more on "why" and less on "what".
 - Keep the user informed and ask for clarification or confirmation where needed.
