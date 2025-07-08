@@ -185,6 +185,19 @@ In addition to a project settings file, a project's `.gemini` directory can cont
     "hideTips": true
     ```
 
+- **`security`** (object):
+  - **Description:** Configures security features for the CLI.
+  - **Default:** `{"blockEnvVarExpansion": false}`
+  - **Properties:**
+    - **`blockEnvVarExpansion`** (boolean): When `true`, prevents shell commands containing environment variable expansion patterns (`$VAR` or `${VAR}`) from being executed. This helps prevent accidental exposure of sensitive environment variables.
+  - **Example:**
+    ```json
+    "security": {
+      "blockEnvVarExpansion": true
+    }
+    ```
+  - **Security Note:** When enabled, commands containing environment variable patterns will be blocked before execution. Escaped variables (`\$VAR`) and non-variable dollar signs (e.g., `$10`) are still allowed. This feature is disabled by default to maintain backward compatibility.
+
 ### Example `settings.json`:
 
 ```json
@@ -209,7 +222,10 @@ In addition to a project settings file, a project's `.gemini` directory can cont
     "logPrompts": true
   },
   "usageStatisticsEnabled": true,
-  "hideTips": false
+  "hideTips": false,
+  "security": {
+    "blockEnvVarExpansion": true
+  }
 }
 ```
 
