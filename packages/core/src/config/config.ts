@@ -214,7 +214,7 @@ export class Config {
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
     };
     this.security = {
-      blockEnvVarExpansion: params.security?.blockEnvVarExpansion ?? true,
+      blockEnvVarExpansion: params.security?.blockEnvVarExpansion ?? false,
     };
     this.checkpointing = params.checkpointing ?? false;
     this.proxy = params.proxy;
