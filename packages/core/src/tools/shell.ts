@@ -223,6 +223,20 @@ Process Group PGID: Process group started or \`(none)\``,
       }
       return commandCheck.reason;
     }
+
+    // Check for environment variable expansion if blocking is enabled
+    if (
+      this.config.getBlockEnvVarExpansion &&
+      this.config.getBlockEnvVarExpansion()
+    ) {
+      // Match $VAR or ${VAR} patterns, but not escaped ones (\$VAR)
+      // Ensure it's a valid env var name (starts with letter or underscore)
+      const envVarPattern = /(?<!\\)\$(?:[A-Za-z_]\w*|\{[A-Za-z_][^}]*\})/;
+      if (envVarPattern.test(params.command)) {
+        return 'Environment variable expansion is not allowed';
+      }
+    }
+
     if (
       !SchemaValidator.validate(
         this.parameterSchema as Record<string, unknown>,

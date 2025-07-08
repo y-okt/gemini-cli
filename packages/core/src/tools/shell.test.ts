@@ -8,6 +8,98 @@ import { expect, describe, it } from 'vitest';
 import { ShellTool } from './shell.js';
 import { Config } from '../config/config.js';
 
+describe('Environment Variable Expansion', () => {
+  it('should allow environment variables when blocking is disabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => false,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo $HOME' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBeNull();
+  });
+
+  it('should block $VAR pattern when blocking is enabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => true,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo $HOME' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBe('Environment variable expansion is not allowed');
+  });
+
+  it('should block ${VAR} pattern when blocking is enabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => true,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo ${HOME}' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBe('Environment variable expansion is not allowed');
+  });
+
+  it('should block multiple environment variables when blocking is enabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => true,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo $USER at ${HOME}' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBe('Environment variable expansion is not allowed');
+  });
+
+  it('should allow dollar signs that are not env vars when blocking is enabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => true,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo "Price is $10"' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBeNull();
+  });
+
+  it('should allow escaped dollar signs when blocking is enabled', () => {
+    const config = {
+      getTargetDir: () => '/test/project',
+      getDebugMode: () => false,
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getBlockEnvVarExpansion: () => true,
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+
+    const params = { command: 'echo "\\$HOME"' };
+    const result = shellTool.validateToolParams(params);
+    expect(result).toBeNull();
+  });
+});
+
 describe('ShellTool', () => {
   it('should allow a command if no restrictions are provided', async () => {
     const config = {

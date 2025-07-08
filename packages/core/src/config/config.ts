@@ -126,6 +126,9 @@ export interface ConfigParameters {
     respectGitIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
   };
+  security?: {
+    blockEnvVarExpansion?: boolean;
+  };
   checkpointing?: boolean;
   proxy?: string;
   cwd: string;
@@ -162,6 +165,9 @@ export class Config {
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
     enableRecursiveFileSearch: boolean;
+  };
+  private readonly security: {
+    blockEnvVarExpansion: boolean;
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
   private gitService: GitService | undefined = undefined;
@@ -206,6 +212,9 @@ export class Config {
       respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
+    };
+    this.security = {
+      blockEnvVarExpansion: params.security?.blockEnvVarExpansion ?? true,
     };
     this.checkpointing = params.checkpointing ?? false;
     this.proxy = params.proxy;
@@ -413,6 +422,10 @@ export class Config {
 
   getFileFilteringRespectGitIgnore(): boolean {
     return this.fileFiltering.respectGitIgnore;
+  }
+
+  getBlockEnvVarExpansion(): boolean {
+    return this.security.blockEnvVarExpansion;
   }
 
   getCheckpointingEnabled(): boolean {

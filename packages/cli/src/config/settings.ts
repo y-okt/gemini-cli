@@ -63,6 +63,11 @@ export interface Settings {
     enableRecursiveFileSearch?: boolean;
   };
 
+  // Security settings
+  security?: {
+    blockEnvVarExpansion?: boolean;
+  };
+
   // UI setting. Does not display the ANSI-controlled terminal title.
   hideWindowTitle?: boolean;
   hideTips?: boolean;

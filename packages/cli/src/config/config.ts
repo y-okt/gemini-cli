@@ -251,6 +251,10 @@ export async function loadCliConfig(
       enableRecursiveFileSearch:
         settings.fileFiltering?.enableRecursiveFileSearch,
     },
+    // Security settings
+    security: {
+      blockEnvVarExpansion: settings.security?.blockEnvVarExpansion,
+    },
     checkpointing: argv.checkpointing || settings.checkpointing?.enabled,
     proxy:
       process.env.HTTPS_PROXY ||
