@@ -121,10 +121,13 @@ describe('Server Config (config.ts)', () => {
       await config.refreshAuth(authType);
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        MODEL,
+        MODEL, // Should be called with the original model 'gemini-pro'
         authType,
       );
+      // Verify that contentGeneratorConfig is updated with the new model
       expect(config.getContentGeneratorConfig()).toEqual(mockContentConfig);
+      expect(config.getContentGeneratorConfig().model).toBe('gemini-ultra');
+      expect(config.getModel()).toBe('gemini-ultra'); // getModel() should return the updated model
       expect(GeminiClient).toHaveBeenCalledWith(config);
     });
   });
