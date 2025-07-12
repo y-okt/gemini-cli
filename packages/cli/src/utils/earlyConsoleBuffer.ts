@@ -9,6 +9,25 @@ import { ConsoleMessageItem } from '../ui/types.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
 
+// Define which console messages should be shown in DetailedMessagesDisplay
+const CONSOLE_DISPLAY_PATTERNS: string[] = ['MCP STDERR'];
+
+/**
+ * Checks if a console message should be displayed in DetailedMessagesDisplay
+ * based on configured patterns.
+ *
+ * @param message The console message content
+ * @param patterns The patterns to check against
+ * @returns true if the message should be shown in DetailedMessagesDisplay, false for regular console
+ */
+function shouldShowInDisplay(message: string, patterns?: string[]): boolean {
+  if (!patterns || patterns.length === 0) {
+    return true; // Default to showing in display if no patterns
+  }
+
+  return patterns.some((pattern) => message.includes(pattern));
+}
+
 interface BufferedMessage {
   type: ConsoleMethod;
   args: unknown[];
@@ -41,12 +60,25 @@ class EarlyConsoleBuffer {
     const createInterceptor =
       (type: ConsoleMethod) =>
       (...args: unknown[]) => {
-        // Buffer the message
-        this.buffer.push({
-          type,
-          args,
-          timestamp: Date.now(),
-        });
+        const formattedMessage = util.format(...args);
+
+        // Check if message should be shown in display
+        const shouldShowInDisplayFlag = shouldShowInDisplay(
+          formattedMessage,
+          CONSOLE_DISPLAY_PATTERNS,
+        );
+
+        if (shouldShowInDisplayFlag) {
+          // Buffer the message for DetailedMessagesDisplay
+          this.buffer.push({
+            type,
+            args,
+            timestamp: Date.now(),
+          });
+        } else {
+          // Pass through to original console
+          this.originalMethods[type](...args);
+        }
       };
 
     console.log = createInterceptor('log');
