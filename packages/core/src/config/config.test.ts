@@ -112,8 +112,9 @@ describe('Server Config (config.ts)', () => {
     it('should refresh auth and update config', async () => {
       const config = new Config(baseParams);
       const authType = AuthType.USE_GEMINI;
+      const newModel = 'gemini-flash';
       const mockContentConfig = {
-        model: 'gemini-ultra',
+        model: newModel,
         apiKey: 'test-key',
       };
 
@@ -129,8 +130,8 @@ describe('Server Config (config.ts)', () => {
       );
       // Verify that contentGeneratorConfig is updated with the new model
       expect(config.getContentGeneratorConfig()).toEqual(mockContentConfig);
-      expect(config.getContentGeneratorConfig().model).toBe('gemini-ultra');
-      expect(config.getModel()).toBe('gemini-ultra'); // getModel() should return the updated model
+      expect(config.getContentGeneratorConfig().model).toBe(newModel);
+      expect(config.getModel()).toBe(newModel); // getModel() should return the updated model
       expect(GeminiClient).toHaveBeenCalledWith(config);
     });
   });
