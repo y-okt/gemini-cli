@@ -39,6 +39,7 @@ import {
 } from './contentGenerator.js';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { recordTurnMetrics } from '../telemetry/metrics.js';
 
 function isThinkingSupported(model: string) {
   if (model.startsWith('gemini-2.5')) return true;
@@ -282,6 +283,14 @@ export class GeminiClient {
     // Ensure turns never exceeds MAX_TURNS to prevent infinite loops
     const boundedTurns = Math.min(turns, this.MAX_TURNS);
     if (!boundedTurns) {
+      recordTurnMetrics(
+        this.config,
+        this.config.getModel(),
+        this.MAX_TURNS - boundedTurns,
+        this.MAX_TURNS,
+        true, // limit reached
+        this.sessionTurnCount,
+      );
       return new Turn(this.getChat(), prompt_id);
     }
 
@@ -304,6 +313,15 @@ export class GeminiClient {
       if (currentModel !== initialModel) {
         // Model was switched (likely due to quota error fallback)
         // Don't continue with recursive call to prevent unwanted Flash execution
+        // Record telemetry for the turn
+        recordTurnMetrics(
+          this.config,
+          currentModel,
+          this.MAX_TURNS - boundedTurns + 1,
+          this.MAX_TURNS,
+          false, // limit not reached
+          this.sessionTurnCount,
+        );
         return turn;
       }
 
@@ -323,7 +341,26 @@ export class GeminiClient {
           boundedTurns - 1,
           initialModel,
         );
+      } else {
+        recordTurnMetrics(
+          this.config,
+          currentModel,
+          this.MAX_TURNS - boundedTurns + 1,
+          this.MAX_TURNS,
+          false, // limit not reached
+          this.sessionTurnCount,
+        );
       }
+    } else {
+      // Record telemetry when turn ends with pending tool calls or abort
+      recordTurnMetrics(
+        this.config,
+        this.config.getModel(),
+        this.MAX_TURNS - boundedTurns + 1,
+        this.MAX_TURNS,
+        false, // limit not reached
+        this.sessionTurnCount,
+      );
     }
     return turn;
   }
