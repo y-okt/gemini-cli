@@ -41,7 +41,8 @@ import { Help } from './components/Help.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
 import { LoadedSettings } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
-import { useConsolePatcher } from './components/ConsolePatcher.js';
+import { ConsolePatcher } from './utils/ConsolePatcher.js';
+import { registerCleanup } from '../utils/cleanup.js';
 import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
 import { HistoryItemDisplay } from './components/HistoryItemDisplay.js';
 import { earlyConsoleBuffer } from '../utils/earlyConsoleBuffer.js';
@@ -127,11 +128,22 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setEnableConsolePatcher(true);
   }, [handleNewMessage]);
 
-  useConsolePatcher({
-    onNewMessage: handleNewMessage,
-    debugMode: config.getDebugMode(),
-    enabled: enableConsolePatcher,
-  });
+  useEffect(() => {
+    if (!enableConsolePatcher) {
+      return;
+    }
+
+    const consolePatcher = new ConsolePatcher({
+      onNewMessage: handleNewMessage,
+      debugMode: config.getDebugMode(),
+    });
+    consolePatcher.patch();
+    registerCleanup(consolePatcher.cleanup);
+
+    return () => {
+      consolePatcher.cleanup();
+    };
+  }, [handleNewMessage, config, enableConsolePatcher]);
 
   const { stats: sessionStats } = useSessionStats();
   const [staticNeedsRefresh, setStaticNeedsRefresh] = useState(false);
