@@ -137,5 +137,5 @@ export class ConsolePatcher {
 export const earlyConsolePatcher = new ConsolePatcher({
   debugMode: false,
   bufferMode: true,
-  filterPatterns: ['MCP STDERR', 'Loaded cached credentials'],
+  filterPatterns: ['MCP STDERR'],
 });
