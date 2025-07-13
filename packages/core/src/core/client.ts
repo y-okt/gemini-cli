@@ -350,7 +350,7 @@ This is the cursor position in the file:
         // Record telemetry for the turn
         recordTurnMetrics(
           this.config,
-          currentModel,
+          initialModel,
           this.MAX_TURNS - boundedTurns + 1,
           this.MAX_TURNS,
           false, // limit not reached
