@@ -42,10 +42,6 @@ export class ConsolePatcher {
     this.params = params;
   }
 
-  updateParams(params: Partial<ConsolePatcherParams>): void {
-    this.params = { ...this.params, ...params };
-  }
-
   patch() {
     if (this.isPatched) return;
     this.isPatched = true;
