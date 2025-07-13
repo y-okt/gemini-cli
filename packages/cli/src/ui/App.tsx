@@ -41,11 +41,10 @@ import { Help } from './components/Help.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
 import { LoadedSettings } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
-import { ConsolePatcher } from './utils/ConsolePatcher.js';
+import { earlyConsolePatcher, ConsolePatcher } from './utils/ConsolePatcher.js';
 import { registerCleanup } from '../utils/cleanup.js';
 import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
 import { HistoryItemDisplay } from './components/HistoryItemDisplay.js';
-import { earlyConsoleBuffer } from '../utils/earlyConsoleBuffer.js';
 import { ContextSummaryDisplay } from './components/ContextSummaryDisplay.js';
 import { useHistory } from './hooks/useHistoryManager.js';
 import process from 'node:process';
@@ -98,8 +97,14 @@ export const AppWrapper = (props: AppProps) => (
 );
 
 const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
+  const {
+    consoleMessages,
+    handleNewMessage,
+    clearConsoleMessages: clearConsoleMessagesState,
+  } = useConsoleMessages();
   useBracketedPaste();
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [enableConsolePatcher, setEnableConsolePatcher] = useState(false);
   const { stdout } = useStdout();
   const nightly = version.includes('nightly');
 
@@ -108,23 +113,16 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, []);
 
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const {
-    consoleMessages,
-    handleNewMessage,
-    clearConsoleMessages: clearConsoleMessagesState,
-  } = useConsoleMessages();
-  const [enableConsolePatcher, setEnableConsolePatcher] = useState(false);
 
   useEffect(() => {
-    const bufferedMessages = earlyConsoleBuffer.getBufferedMessages();
+    // Get buffered messages from early console capture
+    const bufferedMessages = earlyConsolePatcher.getBufferedMessages();
     bufferedMessages.forEach((message) => {
       handleNewMessage(message);
     });
+    earlyConsolePatcher.clearBuffer();
+    earlyConsolePatcher.cleanup();
 
-    earlyConsoleBuffer.stop();
-    earlyConsoleBuffer.clear();
-
-    // Enable the console patcher after stopping early buffer
     setEnableConsolePatcher(true);
   }, [handleNewMessage]);
 
@@ -136,13 +134,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode(),
+      bufferMode: false,
+      filterPatterns: undefined,
     });
     consolePatcher.patch();
     registerCleanup(consolePatcher.cleanup);
-
-    return () => {
-      consolePatcher.cleanup();
-    };
   }, [handleNewMessage, config, enableConsolePatcher]);
 
   const { stats: sessionStats } = useSessionStats();

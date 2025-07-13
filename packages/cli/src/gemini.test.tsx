@@ -40,6 +40,16 @@ vi.mock('./utils/earlyConsoleBuffer.js', () => ({
   },
 }));
 
+// Mock ConsolePatcher to prevent it from patching console methods during tests
+vi.mock('./ui/utils/ConsolePatcher.js', () => ({
+  earlyConsolePatcher: {
+    patch: vi.fn(),
+    cleanup: vi.fn(),
+    getBufferedMessages: vi.fn(() => []),
+    clearBuffer: vi.fn(),
+  },
+}));
+
 vi.mock('./config/config.js', () => ({
   loadCliConfig: vi.fn().mockResolvedValue({
     config: {

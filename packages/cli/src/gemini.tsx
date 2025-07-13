@@ -40,7 +40,7 @@ import {
 } from '@google/gemini-cli-core';
 import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
-import { earlyConsoleBuffer } from './utils/earlyConsoleBuffer.js';
+import { earlyConsolePatcher } from './ui/utils/ConsolePatcher.js';
 
 function getNodeMemoryArgs(config: Config): string[] {
   const totalMemoryMB = os.totalmem() / (1024 * 1024);
@@ -91,7 +91,7 @@ export async function main() {
   const settings = loadSettings(workspaceRoot);
 
   // Start buffering console messages
-  earlyConsoleBuffer.start();
+  earlyConsolePatcher.patch();
 
   await cleanupCheckpoints();
   if (settings.errors.length > 0) {
