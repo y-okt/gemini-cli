@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as fs from 'fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import {
@@ -22,16 +23,11 @@ import { ShellTool } from '../tools/shell.js';
 import { WriteFileTool } from '../tools/write-file.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
 import { ReadManyFilesTool } from '../tools/read-many-files.js';
-import {
-  MemoryTool,
-  setGeminiMdFilename,
-  GEMINI_CONFIG_DIR as GEMINI_DIR,
-} from '../tools/memoryTool.js';
+import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
 import { GeminiClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
-import { getProjectTempDir } from '../utils/paths.js';
 import {
   initializeTelemetry,
   DEFAULT_TELEMETRY_TARGET,
@@ -57,6 +53,7 @@ import { IdeConnectionEvent, IdeConnectionType } from '../telemetry/types.js';
 // Re-export OAuth config type
 export type { MCPOAuthConfig };
 import { WorkspaceContext } from '../utils/workspaceContext.js';
+import { Storage } from './storage.js';
 
 export enum ApprovalMode {
   DEFAULT = 'default',
@@ -272,6 +269,7 @@ export class Config {
   private readonly shouldUseNodePtyShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
   private initialized: boolean = false;
+  readonly storage: Storage;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -340,6 +338,7 @@ export class Config {
     this.trustedFolder = params.trustedFolder;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? false;
+    this.storage = new Storage(this.targetDir);
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -362,6 +361,12 @@ export class Config {
     this.initialized = true;
     // Initialize centralized FileDiscoveryService
     this.getFileService();
+
+    const tmpDir = this.storage.getGlobalTempDir();
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+
     if (this.getCheckpointingEnabled()) {
       await this.getGitService();
     }
@@ -589,14 +594,6 @@ export class Config {
 
   getGeminiClient(): GeminiClient {
     return this.geminiClient;
-  }
-
-  getGeminiDir(): string {
-    return path.join(this.targetDir, GEMINI_DIR);
-  }
-
-  getProjectTempDir(): string {
-    return getProjectTempDir(this.getProjectRoot());
   }
 
   getEnableRecursiveFileSearch(): boolean {

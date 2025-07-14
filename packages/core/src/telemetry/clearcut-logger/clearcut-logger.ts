@@ -22,12 +22,9 @@ import {
 } from '../types.js';
 import { EventMetadataKey } from './event-metadata-key.js';
 import { Config } from '../../config/config.js';
+import { InstallationManager } from '../../utils/installationManager.js';
+import { UserAccountManager } from '../../utils/userAccountManager.js';
 import { safeJsonStringify } from '../../utils/safeJsonStringify.js';
-import {
-  getCachedGoogleAccount,
-  getLifetimeGoogleAccounts,
-} from '../../utils/user_account.js';
-import { getInstallationId } from '../../utils/user_id.js';
 import { FixedDeque } from 'mnemonist';
 import { GIT_COMMIT_INFO, CLI_VERSION } from '../../generated/git-commit.js';
 import { DetectedIde, detectIde } from '../../ide/detect-ide.js';
@@ -129,11 +126,8 @@ export class ClearcutLogger {
   private config?: Config;
   private sessionData: EventValue[] = [];
   private promptId: string = '';
-
-  /**
-   * Queue of pending events that need to be flushed to the server.  New events
-   * are added to this queue and then flushed on demand (via `flushToClearcut`)
-   */
+  private readonly installationManager: InstallationManager;
+  private readonly userAccountManager: UserAccountManager;
   private readonly events: FixedDeque<LogEventEntry[]>;
 
   /**
@@ -156,6 +150,8 @@ export class ClearcutLogger {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
     this.promptId = config?.getSessionId() ?? '';
+    this.installationManager = new InstallationManager(config.storage);
+    this.userAccountManager = new UserAccountManager(config.storage);
   }
 
   static getInstance(config?: Config): ClearcutLogger | undefined {
@@ -202,7 +198,7 @@ export class ClearcutLogger {
   }
 
   createLogEvent(eventName: EventNames, data: EventValue[] = []): LogEvent {
-    const email = getCachedGoogleAccount();
+    const email = this.userAccountManager.getCachedGoogleAccount();
 
     if (eventName !== EventNames.START_SESSION) {
       data.push(...this.sessionData);
@@ -220,7 +216,7 @@ export class ClearcutLogger {
     if (email) {
       logEvent.client_email = email;
     } else {
-      logEvent.client_install_id = getInstallationId();
+      logEvent.client_install_id = this.installationManager.getInstallationId();
     }
 
     return logEvent;

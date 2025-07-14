@@ -11,7 +11,7 @@ import {
   clearCachedCredentialFile,
   clearOauthClientCache,
 } from './oauth2.js';
-import { getCachedGoogleAccount } from '../utils/user_account.js';
+import { UserAccountManager } from '../utils/userAccountManager.js';
 import { OAuth2Client, Compute } from 'google-auth-library';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -181,7 +181,7 @@ describe('oauth2', () => {
     });
 
     // Verify the getCachedGoogleAccount function works
-    expect(getCachedGoogleAccount()).toBe('test-google-account@gmail.com');
+    expect(new UserAccountManager().getCachedGoogleAccount()).toBe('test-google-account@gmail.com');
   });
 
   it('should perform login with user code', async () => {
@@ -538,14 +538,15 @@ describe('oauth2', () => {
         googleAccountPath,
         JSON.stringify(accountData),
       );
+      const userAccountManager = new UserAccountManager(new Storage(tempHomeDir));
 
       expect(fs.existsSync(credsPath)).toBe(true);
       expect(fs.existsSync(googleAccountPath)).toBe(true);
-      expect(getCachedGoogleAccount()).toBe('test@example.com');
+      expect(userAccountManager.getCachedGoogleAccount()).toBe('test@example.com');
 
       await clearCachedCredentialFile();
       expect(fs.existsSync(credsPath)).toBe(false);
-      expect(getCachedGoogleAccount()).toBeNull();
+      expect(userAccountManager.getCachedGoogleAccount()).toBeNull();
       const updatedAccountData = JSON.parse(
         fs.readFileSync(googleAccountPath, 'utf-8'),
       );
