@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { getOauthClient, resetOauthClientForTesting } from './oauth2.js';
-import { getCachedGoogleAccount } from '../utils/user_account.js';
+import { UserAccountManager } from '../utils/userAccountManager.js';
 import { OAuth2Client, Compute } from 'google-auth-library';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -178,7 +178,7 @@ describe('oauth2', () => {
     });
 
     // Verify the getCachedGoogleAccount function works
-    expect(getCachedGoogleAccount()).toBe('test-google-account@gmail.com');
+    expect(new UserAccountManager().getCachedGoogleAccount()).toBe('test-google-account@gmail.com');
   });
 
   it('should perform login with user code', async () => {
