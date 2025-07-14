@@ -272,7 +272,7 @@ export const useSlashCommandProcessor = (
     } catch (_err) {
       return [];
     }
-  }, [config]);
+  }, [storage]);
 
   // Define legacy commands
   // This list contains all commands that have NOT YET been migrated to the
@@ -985,8 +985,8 @@ export const useSlashCommandProcessor = (
           }
         },
         action: async (_mainCommand, subCommand, _args) => {
-          const checkpointDir = config?.getProjectTempDir()
-            ? path.join(config.getProjectTempDir(), 'checkpoints')
+          const checkpointDir = storage?.getProjectTempDir()
+            ? path.join(storage.getProjectTempDir(), 'checkpoints')
             : undefined;
 
           if (!checkpointDir) {
@@ -1103,6 +1103,7 @@ export const useSlashCommandProcessor = (
     setPendingCompressionItem,
     clearItems,
     refreshStatic,
+    storage,
   ]);
 
   const handleSlashCommand = useCallback(

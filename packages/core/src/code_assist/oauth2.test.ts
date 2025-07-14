@@ -181,7 +181,10 @@ describe('oauth2', () => {
     });
 
     // Verify the getCachedGoogleAccount function works
-    expect(new UserAccountManager().getCachedGoogleAccount()).toBe('test-google-account@gmail.com');
+    const userAccountManager = new UserAccountManager();
+    expect(userAccountManager.getCachedGoogleAccount()).toBe(
+      'test-google-account@gmail.com',
+    );
   });
 
   it('should perform login with user code', async () => {
