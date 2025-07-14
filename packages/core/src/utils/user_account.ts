@@ -15,7 +15,7 @@ interface UserAccounts {
 }
 
 function getGoogleAccountsCachePath(): string {
-  return path.join(os.homedir(), GEMINI_DIR, GOOGLE_ACCOUNTS_FILENAME);
+  return getGoogleAccountsPath();
 }
 
 /**
@@ -82,8 +82,8 @@ async function readAccounts(filePath: string): Promise<UserAccounts> {
 }
 
 export async function cacheGoogleAccount(email: string): Promise<void> {
+  ensureInternalDirExists();
   const filePath = getGoogleAccountsCachePath();
-  await fsp.mkdir(path.dirname(filePath), { recursive: true });
 
   const accounts = await readAccounts(filePath);
 
