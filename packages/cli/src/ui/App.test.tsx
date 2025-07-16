@@ -409,7 +409,7 @@ describe('App UI', () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain('2 Instruction');
+    expect(lastFrame()).toContain('2 Instructions');
   });
 
   it('should display custom contextFileName with plural when set and count is > 1', async () => {
