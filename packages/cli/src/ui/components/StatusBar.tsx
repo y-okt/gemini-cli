@@ -64,9 +64,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const simplifyModelName = (modelName: string): string =>
     modelName
       .replace(/-preview-\d{2}-\d{2}$/, '') // Remove -preview-05-06 style dates
-      .replace(/-experimental$/, '') // Remove -experimental suffix
-      .replace(/gemini-2\.5-/, 'gemini-2.5-') // Ensure consistent formatting
-      .replace(/gemini-2\.0-/, 'gemini-2.0-');
+      .replace(/-experimental$/, ''); // Remove -experimental suffix;
 
   // Build top line - mode indicators and context usage
   const buildTopLine = (): React.ReactNode => {
@@ -77,6 +75,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       parts.push(
         <Text key="edit" color={Colors.AccentGreen}>
           accepting edits
+        </Text>,
+      );
+      parts.push(
+        <Text key="edit-hint" color={Colors.Gray}>
+          {' '}(shift + tab to toggle)
         </Text>,
       );
     } else if (approvalMode === ApprovalMode.YOLO) {

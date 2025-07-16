@@ -951,7 +951,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               )}
             </Box>
           )}
-          <Box marginTop={1}>
+          <Box>
             <StatusBar
               targetDir={config.getTargetDir()}
               branchName={branchName}
