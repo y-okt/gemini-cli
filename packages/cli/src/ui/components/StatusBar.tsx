@@ -84,7 +84,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       );
       parts.push(
         <Text key="edit-hint" color={Colors.Gray}>
-          {' '}(shift + tab to toggle)
+          {' '}
+          (shift + tab to toggle)
         </Text>,
       );
     } else if (approvalMode === ApprovalMode.YOLO) {
