@@ -70,8 +70,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const buildTopLine = (): React.ReactNode => {
     const parts: React.ReactNode[] = [];
 
-    // Mode indicator (only show active modes)
-    if (approvalMode === ApprovalMode.AUTO_EDIT) {
+    if (shellModeActive) {
+      parts.push(
+        <Text key="shell" color={Colors.AccentBlue}>
+          shell mode
+        </Text>,
+      );
+    } else if (approvalMode === ApprovalMode.AUTO_EDIT) {
       parts.push(
         <Text key="edit" color={Colors.AccentGreen}>
           accepting edits
@@ -86,12 +91,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       parts.push(
         <Text key="yolo" color={Colors.AccentRed}>
           YOLO
-        </Text>,
-      );
-    } else if (shellModeActive) {
-      parts.push(
-        <Text key="shell" color={Colors.AccentBlue}>
-          shell mode
         </Text>,
       );
     }
