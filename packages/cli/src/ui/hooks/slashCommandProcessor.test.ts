@@ -101,6 +101,7 @@ describe('useSlashCommandProcessor', () => {
   let mockTryCompressChat: ReturnType<typeof vi.fn>;
   let mockGeminiClient: GeminiClient;
   let mockConfig: Config;
+  let mockCorgiMode: ReturnType<typeof vi.fn>;
   const mockUseSessionStats = useSessionStats as Mock;
 
   beforeEach(() => {
@@ -131,6 +132,7 @@ describe('useSlashCommandProcessor', () => {
       getSessionId: vi.fn(() => 'test-session-id'),
       getIdeMode: vi.fn(() => false),
     } as unknown as Config;
+    mockCorgiMode = vi.fn();
     mockUseSessionStats.mockReturnValue({
       stats: {
         sessionStartTime: new Date('2025-01-01T00:00:00.000Z'),
@@ -171,6 +173,7 @@ describe('useSlashCommandProcessor', () => {
         mockOpenThemeDialog,
         mockOpenAuthDialog,
         mockOpenEditorDialog,
+        mockCorgiMode,
         mockSetQuittingMessages,
         vi.fn(), // mockOpenPrivacyNotice
       ),

@@ -138,6 +138,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [footerHeight, setFooterHeight] = useState<number>(0);
+  const [_, setCorgiMode] = useState(false);
   const [currentModel, setCurrentModel] = useState(config.getModel());
   const [shellModeActive, setShellModeActive] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
@@ -223,6 +224,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     handleEditorSelect,
     exitEditorDialog,
   } = useEditorSettings(settings, setEditorError, addItem);
+
+  const toggleCorgiMode = useCallback(() => {
+    setCorgiMode((prev) => !prev);
+  }, []);
 
   const performMemoryRefresh = useCallback(async () => {
     addItem(
@@ -386,6 +391,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openThemeDialog,
     openAuthDialog,
     openEditorDialog,
+    toggleCorgiMode,
     setQuittingMessages,
     openPrivacyNotice,
   );
