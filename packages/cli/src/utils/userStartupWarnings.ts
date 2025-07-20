@@ -46,7 +46,7 @@ const rootDirectoryCheck: WarningCheck = {
       }
 
       // Check for Windows root directories (C:\, D:\, etc.)
-      const windowsRootPattern = /^[A-Z]:\\$/;
+      const windowsRootPattern = /^[A-Z]:\\$/i;
       if (windowsRootPattern.test(workspaceRealPath)) {
         return errorMessage;
       }
