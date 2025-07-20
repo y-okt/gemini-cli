@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
 import { Config } from '../config/config.js';
+import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 
 // Mock the child_process module to control grep/git grep behavior
 vi.mock('child_process', () => ({
@@ -33,6 +34,7 @@ describe('GrepTool', () => {
 
   const mockConfig = {
     getTargetDir: () => tempRootDir,
+    getWorkspaceContext: () => createMockWorkspaceContext(tempRootDir),
   } as unknown as Config;
 
   beforeEach(async () => {

@@ -101,13 +101,12 @@ export class GrepTool extends BaseTool<GrepToolParams, ToolResult> {
       relativePath || '.',
     );
 
-    // Security Check: Ensure the resolved path is still within the root directory.
-    if (
-      !targetPath.startsWith(this.config.getTargetDir()) &&
-      targetPath !== this.config.getTargetDir()
-    ) {
+    // Security Check: Ensure the resolved path is within workspace boundaries
+    const workspaceContext = this.config.getWorkspaceContext();
+    if (!workspaceContext.isPathWithinWorkspace(targetPath)) {
+      const directories = workspaceContext.getDirectories();
       throw new Error(
-        `Path validation failed: Attempted path "${relativePath || '.'}" resolves outside the allowed root directory "${this.config.getTargetDir()}".`,
+        `Path validation failed: Attempted path "${relativePath || '.'}" resolves outside the allowed workspace directories: ${directories.join(', ')}`,
       );
     }
 

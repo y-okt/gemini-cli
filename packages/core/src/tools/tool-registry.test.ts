@@ -30,6 +30,7 @@ import {
   Schema,
 } from '@google/genai';
 import { spawn } from 'node:child_process';
+import * as os from 'os';
 
 // Use vi.hoisted to define the mock function so it can be used in the vi.mock factory
 const mockDiscoverMcpTools = vi.hoisted(() => vi.fn());
@@ -126,11 +127,11 @@ class MockTool extends BaseTool<{ param: string }, ToolResult> {
 }
 
 const baseConfigParams: ConfigParameters = {
-  cwd: '/tmp',
+  cwd: os.tmpdir(),
   model: 'test-model',
   embeddingModel: 'test-embedding-model',
   sandbox: undefined,
-  targetDir: '/test/dir',
+  targetDir: os.tmpdir(),
   debugMode: false,
   userMemory: '',
   geminiMdFileCount: 0,

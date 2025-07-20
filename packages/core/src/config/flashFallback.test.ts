@@ -7,16 +7,20 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Config } from './config.js';
 import { DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_FLASH_MODEL } from './models.js';
+import * as os from 'os';
 
 describe('Flash Model Fallback Configuration', () => {
   let config: Config;
+  let tempDir: string;
 
   beforeEach(() => {
+    // Use os.tmpdir() which should always exist
+    tempDir = os.tmpdir();
     config = new Config({
       sessionId: 'test-session',
-      targetDir: '/test',
+      targetDir: tempDir,
       debugMode: false,
-      cwd: '/test',
+      cwd: tempDir,
       model: DEFAULT_GEMINI_MODEL,
     });
 
@@ -53,9 +57,9 @@ describe('Flash Model Fallback Configuration', () => {
       // Create config without initializing contentGeneratorConfig
       const newConfig = new Config({
         sessionId: 'test-session-2',
-        targetDir: '/test',
+        targetDir: tempDir,
         debugMode: false,
-        cwd: '/test',
+        cwd: tempDir,
         model: DEFAULT_GEMINI_MODEL,
       });
 
@@ -76,9 +80,9 @@ describe('Flash Model Fallback Configuration', () => {
       // Test with fresh config where contentGeneratorConfig might not be set
       const newConfig = new Config({
         sessionId: 'test-session-2',
-        targetDir: '/test',
+        targetDir: tempDir,
         debugMode: false,
-        cwd: '/test',
+        cwd: tempDir,
         model: 'custom-model',
       });
 
@@ -125,9 +129,9 @@ describe('Flash Model Fallback Configuration', () => {
       // Create config without initializing contentGeneratorConfig
       const newConfig = new Config({
         sessionId: 'test-session-2',
-        targetDir: '/test',
+        targetDir: tempDir,
         debugMode: false,
-        cwd: '/test',
+        cwd: tempDir,
         model: DEFAULT_GEMINI_MODEL,
       });
 
