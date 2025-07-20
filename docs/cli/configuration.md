@@ -377,6 +377,11 @@ Arguments passed directly when running the CLI can override other configurations
 - **`--proxy`**:
   - Sets the proxy for the CLI.
   - Example: `--proxy http://localhost:7890`.
+- **`--include-directories <dir1,dir2,...>`**:
+  - Includes additional directories in the workspace for multi-directory support.
+  - Can be specified multiple times or as comma-separated values.
+  - Example: `--include-directories /path/to/project1,/path/to/project2` or `--include-directories /path/to/project1 --include-directories /path/to/project2`
+  - See [Multi-Directory Workspace](./multi-directory-workspace.md) for more details.
 - **`--version`**:
   - Displays the version of the CLI.
 

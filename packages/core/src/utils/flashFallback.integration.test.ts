@@ -23,7 +23,7 @@ describe('Flash Fallback Integration', () => {
   beforeEach(() => {
     config = new Config({
       sessionId: 'test-session',
-      targetDir: '/test',
+      targetDir: process.cwd(),
       debugMode: false,
       cwd: '/test',
       model: 'gemini-2.5-pro',

@@ -33,6 +33,18 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/copy`**
   - **Description:** Copies the last output produced by Gemini CLI to your clipboard, for easy sharing or reuse.
 
+- **`/directory`** (or **`/dir`**)
+  - **Description:** Manage workspace directories for multi-directory support.
+  - **Sub-commands:**
+    - **`add`**:
+      - **Description:** Add a directory to the workspace. The path can be absolute or relative to the current working directory.
+      - **Usage:** `/directory add <path>`
+      - **Note:** This command is disabled in restrictive sandbox profiles. Use `--include-directories` when starting the session instead.
+    - **`show`**:
+      - **Description:** Display all directories currently included in the workspace.
+      - **Usage:** `/directory show`
+  - **Note:** See [Multi-Directory Workspace](./multi-directory-workspace.md) for more details.
+
 - **`/editor`**
   - **Description:** Open a dialog for selecting supported editors.
 
