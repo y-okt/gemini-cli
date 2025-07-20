@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getUserStartupWarnings } from './userStartupWarnings.js';
 import * as os from 'os';
 import fs from 'fs/promises';
+import path from 'path';
 
 vi.mock('os', () => ({
   default: { homedir: vi.fn() },
@@ -84,7 +85,7 @@ describe('getUserStartupWarnings', () => {
         expect.stringContaining('root directory'),
       );
       expect(warnings).toContainEqual(
-        expect.stringContaining('folder structure is being used'),
+        expect.stringContaining('folder structure will be used'),
       );
     });
 
@@ -93,13 +94,15 @@ describe('getUserStartupWarnings', () => {
         .mockResolvedValueOnce('C:\\')
         .mockResolvedValueOnce(homeDir);
 
+      vi.spyOn(path, 'dirname').mockImplementation(path.win32.dirname);
+
       const warnings = await getUserStartupWarnings('C:\\');
 
       expect(warnings).toContainEqual(
         expect.stringContaining('root directory'),
       );
       expect(warnings).toContainEqual(
-        expect.stringContaining('folder structure is being used'),
+        expect.stringContaining('folder structure will be used'),
       );
     });
 

@@ -6,6 +6,7 @@
 
 import fs from 'fs/promises';
 import * as os from 'os';
+import path from 'path';
 
 type WarningCheck = {
   id: string;
@@ -41,13 +42,7 @@ const rootDirectoryCheck: WarningCheck = {
         'Warning: You are running Gemini CLI in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.';
 
       // Check for Unix root directory
-      if (workspaceRealPath === '/') {
-        return errorMessage;
-      }
-
-      // Check for Windows root directories (C:\, D:\, etc.)
-      const windowsRootPattern = /^[A-Z]:\\$/i;
-      if (windowsRootPattern.test(workspaceRealPath)) {
+      if (path.dirname(workspaceRealPath) === workspaceRealPath) {
         return errorMessage;
       }
 
