@@ -32,8 +32,36 @@ const homeDirectoryCheck: WarningCheck = {
   },
 };
 
+const rootDirectoryCheck: WarningCheck = {
+  id: 'root-directory',
+  check: async (workspaceRoot: string) => {
+    try {
+      const workspaceRealPath = await fs.realpath(workspaceRoot);
+      const errorMessage = 'Warning: You are running Gemini CLI in the root directory. Your entire folder structure is being used for context. It is strongly recommended to run in a project-specific directory.';
+      
+      // Check for Unix root directory
+      if (workspaceRealPath === '/') {
+        return errorMessage;
+      }
+      
+      // Check for Windows root directories (C:\, D:\, etc.)
+      const windowsRootPattern = /^[A-Z]:\\$/;
+      if (windowsRootPattern.test(workspaceRealPath)) {
+        return errorMessage;
+      }
+      
+      return null;
+    } catch (_err: unknown) {
+      return 'Could not verify the current directory due to a file system error.';
+    }
+  },
+};
+
 // All warning checks
-const WARNING_CHECKS: readonly WarningCheck[] = [homeDirectoryCheck];
+const WARNING_CHECKS: readonly WarningCheck[] = [
+  homeDirectoryCheck,
+  rootDirectoryCheck,
+];
 
 export async function getUserStartupWarnings(
   workspaceRoot: string,

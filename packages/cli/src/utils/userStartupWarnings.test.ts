@@ -71,4 +71,58 @@ describe('getUserStartupWarnings', () => {
   //   // Tests for node version check would go here
   //   // This shows how easy it is to add new test sections
   // });
+
+  describe('root directory check', () => {
+    it('should return a warning when running in root directory on Unix', async () => {
+      vi.mocked(fs.realpath)
+        .mockResolvedValueOnce('/')
+        .mockResolvedValueOnce(homeDir);
+
+      const warnings = await getUserStartupWarnings('/');
+
+      expect(warnings).toContainEqual(
+        expect.stringContaining('root directory'),
+      );
+      expect(warnings).toContainEqual(
+        expect.stringContaining('folder structure is being used'),
+      );
+    });
+
+    it('should return a warning when running in root directory on Windows', async () => {
+      vi.mocked(fs.realpath)
+        .mockResolvedValueOnce('C:\\')
+        .mockResolvedValueOnce(homeDir);
+
+      const warnings = await getUserStartupWarnings('C:\\');
+
+      expect(warnings).toContainEqual(
+        expect.stringContaining('root directory'),
+      );
+      expect(warnings).toContainEqual(
+        expect.stringContaining('folder structure is being used'),
+      );
+    });
+
+    it('should not return a warning when running in a non-root directory', async () => {
+      vi.mocked(fs.realpath)
+        .mockResolvedValueOnce('/some/project/path')
+        .mockResolvedValueOnce(homeDir);
+
+      const warnings = await getUserStartupWarnings('/some/project/path');
+      expect(warnings).not.toContainEqual(
+        expect.stringContaining('root directory'),
+      );
+    });
+
+    it('should handle errors when checking root directory', async () => {
+      vi.mocked(fs.realpath)
+        .mockRejectedValueOnce(new Error('FS error'))
+        .mockResolvedValueOnce(homeDir);
+
+      const warnings = await getUserStartupWarnings('/');
+      expect(warnings).toContainEqual(
+        expect.stringContaining('Could not verify'),
+      );
+    });
+  });
 });
