@@ -242,11 +242,16 @@ Process Group PGID: Process group started or \`(none)\``,
         return 'Directory cannot be absolute. Please refer to workspace directories by their name.';
       }
       const workspaceDirs = this.config.getWorkspaceContext().getDirectories();
-      const targetDir = workspaceDirs.find(
+      const matchingDirs = workspaceDirs.filter(
         (dir) => path.basename(dir) === params.directory,
       );
-      if (!targetDir) {
+
+      if (matchingDirs.length === 0) {
         return `Directory '${params.directory}' is not a registered workspace directory. Use '/directory show' to see available directories.`;
+      }
+
+      if (matchingDirs.length > 1) {
+        return `Directory name '${params.directory}' is ambiguous as it matches multiple workspace directories.`;
       }
     }
     return null;
@@ -317,9 +322,16 @@ Process Group PGID: Process group started or \`(none)\``,
         })();
 
     const workspaceDirs = this.config.getWorkspaceContext().getDirectories();
-    const targetDir = params.directory
-      ? workspaceDirs.find((dir) => path.basename(dir) === params.directory)
-      : this.config.getCwd();
+    const targetDir = (() => {
+      if (!params.directory) {
+        return this.config.getCwd();
+      }
+      // `validateToolParams` should have already ensured this is not ambiguous.
+      const matchingDirs = workspaceDirs.filter(
+        (dir) => path.basename(dir) === params.directory,
+      );
+      return matchingDirs[0];
+    })();
 
     if (!targetDir) {
       // This should not happen due to validateToolParams, but as a safeguard:
