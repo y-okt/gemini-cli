@@ -20,7 +20,6 @@ import { GeminiClient } from '../core/client.js';
 import { GitService } from '../services/gitService.js';
 import { loadServerHierarchicalMemory } from '../utils/memoryDiscovery.js';
 
-// Mock fs to handle WorkspaceContext directory validation
 vi.mock('fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('fs')>();
   return {

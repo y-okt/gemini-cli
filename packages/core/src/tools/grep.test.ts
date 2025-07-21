@@ -259,9 +259,14 @@ describe('GrepTool', () => {
       expect(result.llmContent).toContain('L1: another world in sub dir');
 
       // Matches from second directory (with directory name prefix)
-      expect(result.llmContent).toMatch(/grep-tool-second-\w+\/other\.txt/);
+      const secondDirName = path.basename(secondDir);
+      expect(result.llmContent).toContain(
+        `File: ${path.join(secondDirName, 'other.txt')}`,
+      );
       expect(result.llmContent).toContain('L2: world in second');
-      expect(result.llmContent).toMatch(/grep-tool-second-\w+\/another\.js/);
+      expect(result.llmContent).toContain(
+        `File: ${path.join(secondDirName, 'another.js')}`,
+      );
       expect(result.llmContent).toContain('L1: function world()');
 
       // Clean up
