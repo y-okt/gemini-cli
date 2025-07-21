@@ -199,6 +199,9 @@ describe('Gemini Client (client.ts)', () => {
       setQuotaErrorOccurred: vi.fn(),
       getNoBrowser: vi.fn().mockReturnValue(false),
       getIdeMode: vi.fn().mockReturnValue(false),
+      getWorkspaceContext: vi.fn().mockReturnValue({
+        getDirectories: vi.fn().mockReturnValue(['/test/dir']),
+      }),
       getGeminiClient: vi.fn(),
     };
     const MockedConfig = vi.mocked(Config, true);

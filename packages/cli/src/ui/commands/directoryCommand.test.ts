@@ -49,7 +49,7 @@ describe('directoryCommand', () => {
       expect(result).toEqual({
         type: 'message',
         messageType: 'info',
-        content: `Directory commands:
+        content: `Invalid subcommand. Available commands:
   /directory add <path>  - Add a directory to the workspace
   /directory show        - Show all workspace directories`,
       });

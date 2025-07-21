@@ -163,7 +163,6 @@ export class GeminiClient {
   }
 
   private async getEnvironment(): Promise<Part[]> {
-    const cwd = this.config.getWorkingDir();
     const today = new Date().toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
@@ -171,16 +170,30 @@ export class GeminiClient {
       day: 'numeric',
     });
     const platform = process.platform;
-    const folderStructure = await getFolderStructure(cwd, {
-      fileService: this.config.getFileService(),
-    });
-    const context = `
+
+    const workspaceContext = this.config.getWorkspaceContext();
+    const workspaceDirectories = workspaceContext.getDirectories();
+
+    const folderStructures = await Promise.all(
+      workspaceDirectories.map((dir) =>
+        getFolderStructure(dir, {
+          fileService: this.config.getFileService(),
+        }),
+      ),
+    );
+
+    const folderStructure = folderStructures.join('\n');
+
+    let context = `
   This is the Gemini CLI. We are setting up the context for our chat.
   Today's date is ${today}.
   My operating system is: ${platform}
-  I'm currently working in the directory: ${cwd}
-  ${folderStructure}
-          `.trim();
+  I'm currently working in the directory: ${this.config.getWorkingDir()}
+`;
+    context += '  The following directories are included in the workspace:\n';
+    context += workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
+    context += `\n\n  ${folderStructure}`;
+    context = context.trim();
 
     const initialParts: Part[] = [{ text: context }];
     const toolRegistry = await this.config.getToolRegistry();
