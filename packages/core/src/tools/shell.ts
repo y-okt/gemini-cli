@@ -239,14 +239,14 @@ Process Group PGID: Process group started or \`(none)\``,
     }
     if (params.directory) {
       if (path.isAbsolute(params.directory)) {
-        return 'Directory cannot be absolute. Must be relative to the project root directory.';
+        return 'Directory cannot be absolute. Please refer to workspace directories by their name.';
       }
-      const directory = path.resolve(
-        this.config.getTargetDir(),
-        params.directory,
+      const workspaceDirs = this.config.getWorkspaceContext().getDirectories();
+      const targetDir = workspaceDirs.find(
+        (dir) => path.basename(dir) === params.directory,
       );
-      if (!fs.existsSync(directory)) {
-        return 'Directory must exist.';
+      if (!targetDir) {
+        return `Directory '${params.directory}' is not a registered workspace directory. Use '/directory show' to see available directories.`;
       }
     }
     return null;
@@ -316,17 +316,30 @@ Process Group PGID: Process group started or \`(none)\``,
           return `{ ${command} }; __code=$?; pgrep -g 0 >${tempFilePath} 2>&1; exit $__code;`;
         })();
 
+    const workspaceDirs = this.config.getWorkspaceContext().getDirectories();
+    const targetDir = params.directory
+      ? workspaceDirs.find((dir) => path.basename(dir) === params.directory)
+      : this.config.getCwd();
+
+    if (!targetDir) {
+      // This should not happen due to validateToolParams, but as a safeguard:
+      return {
+        llmContent: `Error: Could not find workspace directory '${params.directory}'.`,
+        returnDisplay: `Error: Workspace directory not found.`,
+      };
+    }
+
     // spawn command in specified directory (or project root if not specified)
     const shell = isWindows
       ? spawn('cmd.exe', ['/c', command], {
           stdio: ['ignore', 'pipe', 'pipe'],
           // detached: true, // ensure subprocess starts its own process group (esp. in Linux)
-          cwd: path.resolve(this.config.getTargetDir(), params.directory || ''),
+          cwd: targetDir,
         })
       : spawn('bash', ['-c', command], {
           stdio: ['ignore', 'pipe', 'pipe'],
           detached: true, // ensure subprocess starts its own process group (esp. in Linux)
-          cwd: path.resolve(this.config.getTargetDir(), params.directory || ''),
+          cwd: targetDir,
         });
 
     let exited = false;
