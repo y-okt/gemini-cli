@@ -30,7 +30,9 @@ import {
   Schema,
 } from '@google/genai';
 import { spawn } from 'node:child_process';
-import * as os from 'os';
+import fs from 'node:fs';
+
+vi.mock('node:fs');
 
 // Use vi.hoisted to define the mock function so it can be used in the vi.mock factory
 const mockDiscoverMcpTools = vi.hoisted(() => vi.fn());
@@ -127,11 +129,11 @@ class MockTool extends BaseTool<{ param: string }, ToolResult> {
 }
 
 const baseConfigParams: ConfigParameters = {
-  cwd: os.tmpdir(),
+  cwd: '/tmp',
   model: 'test-model',
   embeddingModel: 'test-embedding-model',
   sandbox: undefined,
-  targetDir: os.tmpdir(),
+  targetDir: '/test/dir',
   debugMode: false,
   userMemory: '',
   geminiMdFileCount: 0,
@@ -145,6 +147,10 @@ describe('ToolRegistry', () => {
   let mockConfigGetToolDiscoveryCommand: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.statSync).mockReturnValue({
+      isDirectory: () => true,
+    } as fs.Stats);
     config = new Config(baseConfigParams);
     toolRegistry = new ToolRegistry(config);
     vi.spyOn(console, 'warn').mockImplementation(() => {});
