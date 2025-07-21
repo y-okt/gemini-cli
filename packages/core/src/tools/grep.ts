@@ -214,8 +214,19 @@ export class GrepTool extends BaseTool<GrepToolParams, ToolResult> {
         allMatches = allMatches.concat(matches);
       }
 
+      let searchLocationDescription: string;
+      if (searchDirAbs === null) {
+        const numDirs = workspaceContext.getDirectories().length;
+        searchLocationDescription =
+          numDirs > 1
+            ? `across ${numDirs} workspace directories`
+            : `in the workspace directory`;
+      } else {
+        searchLocationDescription = `in path "${searchDirDisplay}"`;
+      }
+
       if (allMatches.length === 0) {
-        const noMatchMsg = `No matches found for pattern "${params.pattern}" in path "${searchDirDisplay}"${params.include ? ` (filter: "${params.include}")` : ''}.`;
+        const noMatchMsg = `No matches found for pattern "${params.pattern}" ${searchLocationDescription}${params.include ? ` (filter: "${params.include}")` : ''}.`;
         return { llmContent: noMatchMsg, returnDisplay: `No matches found` };
       }
 
@@ -236,7 +247,9 @@ export class GrepTool extends BaseTool<GrepToolParams, ToolResult> {
       const matchCount = allMatches.length;
       const matchTerm = matchCount === 1 ? 'match' : 'matches';
 
-      let llmContent = `Found ${matchCount} ${matchTerm} for pattern "${params.pattern}" in path "${searchDirDisplay}"${params.include ? ` (filter: "${params.include}")` : ''}:\n---\n`;
+      let llmContent = `Found ${matchCount} ${matchTerm} for pattern "${params.pattern}" ${searchLocationDescription}${params.include ? ` (filter: "${params.include}")` : ''}:
+---
+`;
 
       for (const filePath in matchesByFile) {
         llmContent += `File: ${filePath}\n`;
