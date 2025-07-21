@@ -188,7 +188,9 @@ export class GeminiClient {
     if (workspaceDirectories.length === 1) {
       workingDirPreamble = `I'm currently working in the directory: ${workspaceDirectories[0]}`;
     } else {
-      const dirList = workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
+      const dirList = workspaceDirectories
+        .map((dir) => `  - ${dir}`)
+        .join('\n');
       workingDirPreamble = `I'm currently working in the following directories:\n${dirList}`;
     }
 
