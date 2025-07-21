@@ -117,15 +117,22 @@ export const directoryCommand: SlashCommand = {
   kind: CommandKind.BUILT_IN,
   subCommands: [addSubcommand, showSubcommand],
   action: (context: CommandContext, args: string) => {
-    if (!args.trim()) {
-      // Show help if no subcommand is provided
-      return {
-        type: 'message' as const,
-        messageType: 'info' as const,
-        content: `Directory commands:
+    const [subcommandName, ...subcommandArgs] = args.trim().split(/\s+/);
+    const subcommand = directoryCommand.subCommands?.find(
+      (cmd) => cmd.name === subcommandName,
+    );
+
+    if (subcommand?.action) {
+      return subcommand.action(context, subcommandArgs.join(' '));
+    }
+
+    // Show help if no subcommand is provided or subcommand is invalid
+    return {
+      type: 'message' as const,
+      messageType: 'info' as const,
+      content: `Invalid subcommand. Available commands:
   /directory add <path>  - Add a directory to the workspace
   /directory show        - Show all workspace directories`,
-      };
-    }
+    };
   },
 };
