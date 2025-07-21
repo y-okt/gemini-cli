@@ -403,6 +403,10 @@ export class Config {
     return this.workspaceContext;
   }
 
+  getCwd(): string {
+    return this.cwd;
+  }
+
   getToolRegistry(): Promise<ToolRegistry> {
     return Promise.resolve(this.toolRegistry);
   }
