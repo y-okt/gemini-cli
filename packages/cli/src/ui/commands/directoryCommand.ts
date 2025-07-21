@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SlashCommand, CommandContext } from './types.js';
+import { SlashCommand, CommandContext, CommandKind } from './types.js';
 import process from 'node:process';
 
 const addSubcommand: SlashCommand = {
   name: 'add',
   description: 'Add a directory to the workspace',
+  kind: CommandKind.BUILT_IN,
   action: (context: CommandContext, args: string) => {
     const config = context.services.config;
     if (!config) {
@@ -69,6 +70,7 @@ const addSubcommand: SlashCommand = {
 const showSubcommand: SlashCommand = {
   name: 'show',
   description: 'Show all workspace directories',
+  kind: CommandKind.BUILT_IN,
   action: (context: CommandContext) => {
     const config = context.services.config;
     if (!config) {
@@ -110,8 +112,9 @@ const showSubcommand: SlashCommand = {
 
 export const directoryCommand: SlashCommand = {
   name: 'directory',
-  altName: 'dir',
+  altNames: ['dir'],
   description: 'Manage workspace directories',
+  kind: CommandKind.BUILT_IN,
   subCommands: [addSubcommand, showSubcommand],
   action: (context: CommandContext, args: string) => {
     if (!args.trim()) {
