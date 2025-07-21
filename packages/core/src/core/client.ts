@@ -193,16 +193,21 @@ export class GeminiClient {
 
     const folderStructure = folderStructures.join('\n');
 
-    let context = `
+    let workingDirPreamble: string;
+    if (workspaceDirectories.length === 1) {
+      workingDirPreamble = `I'm currently working in the directory: ${workspaceDirectories[0]}`;
+    } else {
+      const dirList = workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
+      workingDirPreamble = `I'm currently working in the following directories:\n${dirList}`;
+    }
+
+    const context = `
   This is the Gemini CLI. We are setting up the context for our chat.
   Today's date is ${today}.
   My operating system is: ${platform}
-  I'm currently working in the directory: ${this.config.getWorkingDir()}
-`;
-    context += '  The following directories are included in the workspace:\n';
-    context += workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
-    context += `\n\n  ${folderStructure}`;
-    context = context.trim();
+  ${workingDirPreamble}
+  ${folderStructure}
+          `.trim();
 
     const initialParts: Part[] = [{ text: context }];
     const toolRegistry = await this.config.getToolRegistry();

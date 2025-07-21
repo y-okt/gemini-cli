@@ -5,7 +5,10 @@
  */
 
 import { SlashCommand, CommandContext, CommandKind } from './types.js';
-import process from 'node:process';
+
+const HELP_MESSAGE = `Invalid subcommand. Available commands:
+  /directory add <path>  - Add a directory to the workspace
+  /directory show        - Show all workspace directories`;
 
 const addSubcommand: SlashCommand = {
   name: 'add',
@@ -22,15 +25,7 @@ const addSubcommand: SlashCommand = {
     }
 
     // Check if running in a restrictive sandbox profile
-    const sandboxConfig = config.getSandbox();
-    const seatbeltProfile = process.env.SEATBELT_PROFILE;
-
-    if (
-      sandboxConfig &&
-      sandboxConfig.command === 'sandbox-exec' &&
-      seatbeltProfile &&
-      seatbeltProfile.startsWith('restrictive-')
-    ) {
+    if (config.isRestrictiveSandbox()) {
       return {
         type: 'message' as const,
         messageType: 'error' as const,
@@ -126,13 +121,10 @@ export const directoryCommand: SlashCommand = {
       return subcommand.action(context, subcommandArgs.join(' '));
     }
 
-    // Show help if no subcommand is provided or subcommand is invalid
     return {
       type: 'message' as const,
       messageType: 'info' as const,
-      content: `Invalid subcommand. Available commands:
-  /directory add <path>  - Add a directory to the workspace
-  /directory show        - Show all workspace directories`,
+      content: HELP_MESSAGE,
     };
   },
 };

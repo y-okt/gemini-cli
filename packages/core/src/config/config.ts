@@ -380,6 +380,17 @@ export class Config {
     return this.sandbox;
   }
 
+  isRestrictiveSandbox(): boolean {
+    const sandboxConfig = this.getSandbox();
+    const seatbeltProfile = process.env.SEATBELT_PROFILE;
+    return (
+      !!sandboxConfig &&
+      sandboxConfig.command === 'sandbox-exec' &&
+      !!seatbeltProfile &&
+      seatbeltProfile.startsWith('restrictive-')
+    );
+  }
+
   getTargetDir(): string {
     return this.targetDir;
   }

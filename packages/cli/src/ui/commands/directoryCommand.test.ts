@@ -12,11 +12,9 @@ import { WorkspaceContext } from '@google/gemini-cli-core';
 describe('directoryCommand', () => {
   let mockContext: CommandContext;
   let mockWorkspaceContext: WorkspaceContext;
-  let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    originalEnv = { ...process.env };
 
     mockWorkspaceContext = {
       addDirectory: vi.fn(),
@@ -28,7 +26,7 @@ describe('directoryCommand', () => {
       services: {
         config: {
           getWorkspaceContext: vi.fn().mockReturnValue(mockWorkspaceContext),
-          getSandbox: vi.fn().mockReturnValue(undefined),
+          isRestrictiveSandbox: vi.fn().mockReturnValue(false),
         },
       },
     } as unknown as CommandContext;
@@ -36,7 +34,6 @@ describe('directoryCommand', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    process.env = originalEnv;
   });
 
   describe('main command', () => {
@@ -131,12 +128,10 @@ describe('directoryCommand', () => {
     });
 
     describe('sandbox profile restrictions', () => {
-      it('should block add command in restrictive-closed sandbox profile', () => {
-        process.env.SEATBELT_PROFILE = 'restrictive-closed';
-        mockContext.services.config.getSandbox = vi.fn().mockReturnValue({
-          command: 'sandbox-exec',
-          image: 'test-image',
-        });
+      it('should block add command in restrictive sandbox profile', () => {
+        vi.mocked(
+          mockContext.services.config.isRestrictiveSandbox,
+        ).mockReturnValue(true);
 
         if (!addCommand?.action) {
           throw new Error('Add subcommand has no action');
@@ -152,74 +147,10 @@ describe('directoryCommand', () => {
         });
       });
 
-      it('should block add command in restrictive-open sandbox profile', () => {
-        process.env.SEATBELT_PROFILE = 'restrictive-open';
-        mockContext.services.config.getSandbox = vi.fn().mockReturnValue({
-          command: 'sandbox-exec',
-          image: 'test-image',
-        });
-
-        if (!addCommand?.action) {
-          throw new Error('Add subcommand has no action');
-        }
-        const result = addCommand.action(mockContext, '/path/to/dir');
-
-        expect(mockWorkspaceContext.addDirectory).not.toHaveBeenCalled();
-        expect(result).toEqual({
-          type: 'message',
-          messageType: 'error',
-          content:
-            'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.',
-        });
-      });
-
-      it('should allow add command in permissive sandbox profiles', () => {
-        process.env.SEATBELT_PROFILE = 'permissive-open';
-        mockContext.services.config.getSandbox = vi.fn().mockReturnValue({
-          command: 'sandbox-exec',
-          image: 'test-image',
-        });
-
-        if (!addCommand?.action) {
-          throw new Error('Add subcommand has no action');
-        }
-        const result = addCommand.action(mockContext, '/path/to/dir');
-
-        expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith(
-          '/path/to/dir',
-        );
-        expect(result).toEqual({
-          type: 'message',
-          messageType: 'info',
-          content: 'Added directory to workspace: /path/to/dir',
-        });
-      });
-
-      it('should allow add command when not in sandbox', () => {
-        process.env.SEATBELT_PROFILE = 'restrictive-closed';
-        // getSandbox returns undefined when not in sandbox
-
-        if (!addCommand?.action) {
-          throw new Error('Add subcommand has no action');
-        }
-        const result = addCommand.action(mockContext, '/path/to/dir');
-
-        expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith(
-          '/path/to/dir',
-        );
-        expect(result).toEqual({
-          type: 'message',
-          messageType: 'info',
-          content: 'Added directory to workspace: /path/to/dir',
-        });
-      });
-
-      it('should allow add command in docker/podman sandboxes', () => {
-        process.env.SEATBELT_PROFILE = 'restrictive-closed';
-        mockContext.services.config.getSandbox = vi.fn().mockReturnValue({
-          command: 'docker',
-          image: 'test-image',
-        });
+      it('should allow add command when not in a restrictive sandbox', () => {
+        vi.mocked(
+          mockContext.services.config.isRestrictiveSandbox,
+        ).mockReturnValue(false);
 
         if (!addCommand?.action) {
           throw new Error('Add subcommand has no action');

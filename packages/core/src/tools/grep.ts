@@ -203,7 +203,7 @@ export class GrepTool extends BaseTool<GrepToolParams, ToolResult> {
           signal,
         });
 
-        // For multi-directory search, prepend directory info to file paths
+        // Add directory prefix if searching multiple directories
         if (searchDirectories.length > 1) {
           const dirName = path.basename(searchDir);
           matches.forEach((match) => {
