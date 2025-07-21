@@ -68,12 +68,20 @@ describe('aboutCommand', () => {
 
     await aboutCommand.action(mockContext, '');
 
+    process.env.SANDBOX = 'sandbox-exec';
+    process.env.SEATBELT_PROFILE = 'permissive-open';
+    if (!aboutCommand.action) {
+      throw new Error('The about command must have an action.');
+    }
+
+    await aboutCommand.action(mockContext, '');
+
     expect(mockContext.ui.addItem).toHaveBeenCalledWith(
       {
         type: MessageType.ABOUT,
         cliVersion: 'test-version',
         osVersion: 'test-os',
-        sandboxEnv: 'no sandbox',
+        sandboxEnv: 'sandbox-exec (permissive-open)',
         modelVersion: 'test-model',
         selectedAuthType: 'test-auth',
         gcpProject: 'test-gcp-project',

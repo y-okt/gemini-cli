@@ -122,7 +122,7 @@ describe('GrepTool', () => {
       const params: GrepToolParams = { pattern: 'world' };
       const result = await grepTool.execute(params, abortSignal);
       expect(result.llmContent).toContain(
-        'Found 3 matches for pattern "world" in path "."',
+        'Found 3 matches for pattern "world" in the workspace directory',
       );
       expect(result.llmContent).toContain('File: fileA.txt');
       expect(result.llmContent).toContain('L1: hello world');
@@ -147,7 +147,7 @@ describe('GrepTool', () => {
       const params: GrepToolParams = { pattern: 'hello', include: '*.js' };
       const result = await grepTool.execute(params, abortSignal);
       expect(result.llmContent).toContain(
-        'Found 1 match for pattern "hello" in path "." (filter: "*.js")',
+        'Found 1 match for pattern "hello" in the workspace directory (filter: "*.js"):',
       );
       expect(result.llmContent).toContain('File: fileB.js');
       expect(result.llmContent).toContain(
@@ -179,7 +179,7 @@ describe('GrepTool', () => {
       const params: GrepToolParams = { pattern: 'nonexistentpattern' };
       const result = await grepTool.execute(params, abortSignal);
       expect(result.llmContent).toContain(
-        'No matches found for pattern "nonexistentpattern" in path "."',
+        'No matches found for pattern "nonexistentpattern" in the workspace directory.',
       );
       expect(result.returnDisplay).toBe('No matches found');
     });
@@ -188,7 +188,7 @@ describe('GrepTool', () => {
       const params: GrepToolParams = { pattern: 'foo.*bar' }; // Matches 'const foo = "bar";'
       const result = await grepTool.execute(params, abortSignal);
       expect(result.llmContent).toContain(
-        'Found 1 match for pattern "foo.*bar" in path "."',
+        'Found 1 match for pattern "foo.*bar" in the workspace directory:',
       );
       expect(result.llmContent).toContain('File: fileB.js');
       expect(result.llmContent).toContain('L1: const foo = "bar";');
@@ -198,7 +198,7 @@ describe('GrepTool', () => {
       const params: GrepToolParams = { pattern: 'HELLO' };
       const result = await grepTool.execute(params, abortSignal);
       expect(result.llmContent).toContain(
-        'Found 2 matches for pattern "HELLO" in path "."',
+        'Found 2 matches for pattern "HELLO" in the workspace directory:',
       );
       expect(result.llmContent).toContain('File: fileA.txt');
       expect(result.llmContent).toContain('L1: hello world');
