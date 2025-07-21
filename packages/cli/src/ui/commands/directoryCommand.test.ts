@@ -56,7 +56,7 @@ describe('directoryCommand', () => {
     });
 
     it('should have an alternative name', () => {
-      expect(directoryCommand.altName).toBe('dir');
+      expect(directoryCommand.altNames).toEqual(['dir']);
     });
   });
 
