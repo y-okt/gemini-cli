@@ -5,10 +5,25 @@
  */
 
 import { SlashCommand, CommandContext, CommandKind } from './types.js';
+import * as os from 'os';
+import * as path from 'path';
 
 const HELP_MESSAGE = `Invalid subcommand. Available commands:
   /directory add <path>  - Add a directory to the workspace
   /directory show        - Show all workspace directories`;
+
+export function expandHomeDir(p: string): string {
+  if (!p) {
+    return '';
+  }
+  let expandedPath = p;
+  if (p.toLowerCase().startsWith('%userprofile%')) {
+    expandedPath = os.homedir() + p.substring('%userprofile%'.length);
+  } else if (p.startsWith('~')) {
+    expandedPath = os.homedir() + p.substring(1);
+  }
+  return path.normalize(expandedPath);
+}
 
 const addSubcommand: SlashCommand = {
   name: 'add',
@@ -34,7 +49,7 @@ const addSubcommand: SlashCommand = {
       };
     }
 
-    const directory = args.trim();
+    const directory = expandHomeDir(args.trim());
     if (!directory) {
       return {
         type: 'message' as const,
@@ -46,11 +61,14 @@ const addSubcommand: SlashCommand = {
     try {
       const workspaceContext = config.getWorkspaceContext();
       workspaceContext.addDirectory(directory);
+      const gemini = config.getGeminiClient();
+      if (gemini) {
+        gemini.refreshEnvironment();
+      }
 
       return {
-        type: 'message' as const,
-        messageType: 'info' as const,
-        content: `Added directory to workspace: ${directory}`,
+        type: 'update_context' as const,
+        message: `Added directory to workspace: ${directory}`,
       };
     } catch (_error) {
       return {

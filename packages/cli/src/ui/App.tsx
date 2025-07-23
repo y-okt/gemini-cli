@@ -224,13 +224,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, []);
 
   const performMemoryRefresh = useCallback(async () => {
-    addItem(
-      {
-        type: MessageType.INFO,
-        text: 'Refreshing hierarchical memory (GEMINI.md or other context files)...',
-      },
-      Date.now(),
-    );
     try {
       const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(
         process.cwd(),
@@ -244,13 +237,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       config.setGeminiMdFileCount(fileCount);
       setGeminiMdFileCount(fileCount);
 
-      addItem(
-        {
-          type: MessageType.INFO,
-          text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : 'No memory content found.'}`,
-        },
-        Date.now(),
-      );
       if (config.getDebugMode()) {
         console.log(
           `[DEBUG] Refreshed memory content in config: ${memoryContent.substring(0, 200)}...`,
@@ -390,6 +376,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     toggleCorgiMode,
     setQuittingMessages,
     openPrivacyNotice,
+    performMemoryRefresh,
   );
   const pendingHistoryItems = [...pendingSlashCommandHistoryItems];
 

@@ -5,9 +5,11 @@
  */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { directoryCommand } from './directoryCommand.js';
+import { directoryCommand, expandHomeDir } from './directoryCommand.js';
 import { type CommandContext } from './types.js';
 import { WorkspaceContext } from '@google/gemini-cli-core';
+import * as path from 'path';
+import * as os from 'os';
 
 describe('directoryCommand', () => {
   let mockContext: CommandContext;
@@ -27,6 +29,9 @@ describe('directoryCommand', () => {
         config: {
           getWorkspaceContext: vi.fn().mockReturnValue(mockWorkspaceContext),
           isRestrictiveSandbox: vi.fn().mockReturnValue(false),
+          getGeminiClient: vi.fn().mockReturnValue({
+            refreshEnvironment: vi.fn(),
+          }),
         },
       },
     } as unknown as CommandContext;
@@ -72,9 +77,8 @@ describe('directoryCommand', () => {
         '/path/to/new/dir',
       );
       expect(result).toEqual({
-        type: 'message',
-        messageType: 'info',
-        content: 'Added directory to workspace: /path/to/new/dir',
+        type: 'update_context',
+        message: 'Added directory to workspace: /path/to/new/dir',
       });
     });
 
@@ -161,9 +165,8 @@ describe('directoryCommand', () => {
           '/path/to/dir',
         );
         expect(result).toEqual({
-          type: 'message',
-          messageType: 'info',
-          content: 'Added directory to workspace: /path/to/dir',
+          type: 'update_context',
+          message: 'Added directory to workspace: /path/to/dir',
         });
       });
     });
@@ -245,6 +248,13 @@ describe('directoryCommand', () => {
         messageType: 'error',
         content: 'Failed to list directories: Failed to retrieve directories',
       });
+    });
+
+    it('should correctly expand a Windows-style home directory path', () => {
+      const windowsPath = '%userprofile%\\Documents';
+      const expectedPath = path.win32.join(os.homedir(), 'Documents');
+      const result = expandHomeDir(windowsPath);
+      expect(path.win32.normalize(result)).toBe(path.win32.normalize(expectedPath));
     });
   });
 });

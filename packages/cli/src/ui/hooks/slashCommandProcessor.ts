@@ -42,6 +42,7 @@ export const useSlashCommandProcessor = (
   toggleCorgiMode: () => void,
   setQuittingMessages: (message: HistoryItem[]) => void,
   openPrivacyNotice: () => void,
+  performMemoryRefresh: () => Promise<void>,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -306,6 +307,16 @@ export const useSlashCommandProcessor = (
                   type: 'submit_prompt',
                   content: result.content,
                 };
+              case 'update_context':
+                addItem(
+                  {
+                    type: MessageType.INFO,
+                    text: result.message,
+                  },
+                  Date.now(),
+                );
+                await performMemoryRefresh();
+                return { type: 'handled' };
               default: {
                 const unhandled: never = result;
                 throw new Error(`Unhandled slash command result: ${unhandled}`);
@@ -346,6 +357,7 @@ export const useSlashCommandProcessor = (
       openPrivacyNotice,
       openEditorDialog,
       setQuittingMessages,
+      performMemoryRefresh,
     ],
   );
 
