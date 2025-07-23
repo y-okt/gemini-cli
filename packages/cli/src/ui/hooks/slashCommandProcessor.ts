@@ -42,7 +42,6 @@ export const useSlashCommandProcessor = (
   toggleCorgiMode: () => void,
   setQuittingMessages: (message: HistoryItem[]) => void,
   openPrivacyNotice: () => void,
-  performMemoryRefresh: () => Promise<void>,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -315,7 +314,6 @@ export const useSlashCommandProcessor = (
                   },
                   Date.now(),
                 );
-                await performMemoryRefresh();
                 return { type: 'handled' };
               default: {
                 const unhandled: never = result;
@@ -357,7 +355,6 @@ export const useSlashCommandProcessor = (
       openPrivacyNotice,
       openEditorDialog,
       setQuittingMessages,
-      performMemoryRefresh,
     ],
   );
 
