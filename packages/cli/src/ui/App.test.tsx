@@ -23,7 +23,6 @@ import { useGeminiStream } from './hooks/useGeminiStream.js';
 import { useConsoleMessages } from './hooks/useConsoleMessages.js';
 import { StreamingState, ConsoleMessageItem } from './types.js';
 import { Tips } from './components/Tips.js';
-import { useThemeCommand } from './hooks/useThemeCommand.js';
 
 // Define a more complete mock server config based on actual Config
 interface MockServerConfig {
@@ -81,7 +80,6 @@ interface MockServerConfig {
   getAllGeminiMdFilenames: Mock<() => string[]>;
   getGeminiClient: Mock<() => GeminiClient | undefined>;
   getUserTier: Mock<() => Promise<string | undefined>>;
-  getWorkspaceContext: Mock<() => { getDirectories: () => string[] }>;
 }
 
 // Mock @google/gemini-cli-core and its Config class
@@ -152,7 +150,7 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
         getUserTier: vi.fn().mockResolvedValue(undefined),
         getIdeMode: vi.fn(() => false),
         getWorkspaceContext: vi.fn(() => ({
-          getDirectories: vi.fn(() => [opts.targetDir || '/test/dir']),
+          getDirectories: vi.fn(() => []),
         })),
       };
     });
@@ -173,7 +171,12 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
 
 // Mock heavy dependencies or those with side effects
 vi.mock('./hooks/useGeminiStream', () => ({
-  useGeminiStream: vi.fn(),
+  useGeminiStream: vi.fn(() => ({
+    streamingState: 'Idle',
+    submitQuery: vi.fn(),
+    initError: null,
+    pendingHistoryItems: [],
+  })),
 }));
 
 vi.mock('./hooks/useAuthCommand', () => ({
@@ -220,32 +223,6 @@ vi.mock('./components/Header.js', () => ({
   Header: vi.fn(() => null),
 }));
 
-vi.mock('./components/ThemeDialog.js', async () => {
-  const { createElement } = await import('react');
-  return {
-    ThemeDialog: vi.fn(() =>
-      createElement('div', null, "I'm Feeling Lucky (esc to cancel)"),
-    ),
-  };
-});
-
-vi.mock('./hooks/useThemeCommand', () => ({
-  useThemeCommand: vi.fn(),
-}));
-
-vi.mock('./hooks/useEditorSettings', () => ({
-  useEditorSettings: vi.fn(() => ({
-    isEditorDialogOpen: false,
-    openEditorDialog: vi.fn(),
-    handleEditorSelect: vi.fn(),
-    exitEditorDialog: vi.fn(),
-  })),
-}));
-
-vi.mock('../config/auth.js', () => ({
-  validateAuthMethod: vi.fn(() => null), // Return null to indicate no error
-}));
-
 describe('App UI', () => {
   let mockConfig: MockServerConfig;
   let mockSettings: LoadedSettings;
@@ -280,23 +257,6 @@ describe('App UI', () => {
   };
 
   beforeEach(() => {
-    // Set default mock for useGeminiStream
-    vi.mocked(useGeminiStream).mockReturnValue({
-      streamingState: StreamingState.Idle,
-      submitQuery: vi.fn(),
-      initError: null,
-      pendingHistoryItems: [],
-      thought: null,
-    });
-
-    // Set default mock for useThemeCommand
-    vi.mocked(useThemeCommand).mockReturnValue({
-      isThemeDialogOpen: false,
-      openThemeDialog: vi.fn(),
-      handleThemeSelect: vi.fn(),
-      handleThemeHighlight: vi.fn(),
-    });
-
     const ServerConfigMocked = vi.mocked(ServerConfig, true);
     mockConfig = new ServerConfigMocked({
       embeddingModel: 'test-embedding-model',
@@ -321,13 +281,6 @@ describe('App UI', () => {
     // Ensure a theme is set so the theme dialog does not appear.
     mockSettings = createMockSettings({ workspace: { theme: 'Default' } });
     vi.mocked(ideContext.getOpenFilesContext).mockReturnValue(undefined);
-
-    // Ensure getWorkspaceContext is available if not added by the constructor
-    if (!mockConfig.getWorkspaceContext) {
-      mockConfig.getWorkspaceContext = vi.fn(() => ({
-        getDirectories: vi.fn(() => ['/test/dir']),
-      }));
-    }
   });
 
   afterEach(() => {
@@ -669,14 +622,6 @@ describe('App UI', () => {
       mockSettings = createMockSettings({});
       mockConfig.getDebugMode.mockReturnValue(false);
       mockConfig.getShowMemoryUsage.mockReturnValue(false);
-
-      // Mock theme dialog to be open when no theme is set
-      vi.mocked(useThemeCommand).mockReturnValue({
-        isThemeDialogOpen: true,
-        openThemeDialog: vi.fn(),
-        handleThemeSelect: vi.fn(),
-        handleThemeHighlight: vi.fn(),
-      });
     });
 
     afterEach(() => {
@@ -761,19 +706,10 @@ describe('App UI', () => {
         thought: null,
       });
 
-      // Add console log to help debug
-      const originalConsoleLog = console.log;
-      console.log = vi.fn();
-
-      const mockGeminiClient = {
+      mockConfig.getGeminiClient.mockReturnValue({
         isInitialized: vi.fn(() => true),
         getUserTier: vi.fn(),
-      } as unknown as GeminiClient;
-
-      mockConfig.getGeminiClient.mockReturnValue(mockGeminiClient);
-
-      // Ensure theme is set so theme dialog doesn't appear
-      mockSettings = createMockSettings({ workspace: { theme: 'Default' } });
+      } as unknown as GeminiClient);
 
       const { unmount, rerender } = render(
         <App
@@ -793,14 +729,11 @@ describe('App UI', () => {
         />,
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockSubmitQuery).toHaveBeenCalledWith(
         'hello from prompt-interactive',
       );
-
-      // Restore console.log
-      console.log = originalConsoleLog;
     });
   });
 
