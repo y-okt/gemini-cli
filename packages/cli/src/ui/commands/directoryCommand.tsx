@@ -12,7 +12,7 @@ export const directoryCommand: SlashCommand = {
   altNames: ['dir'],
   description: 'Manage workspace directories',
   kind: CommandKind.BUILT_IN,
-  action: (context: CommandContext, args: string) => {
+  action: async (context: CommandContext, args: string) => {
     const {
       ui: { addItem },
       services: { config },
@@ -86,7 +86,7 @@ export const directoryCommand: SlashCommand = {
         if (added.length > 0) {
           const gemini = config.getGeminiClient();
           if (gemini) {
-            gemini.refreshEnvironment();
+            await gemini.refreshEnvironment();
           }
           addItem(
             {
