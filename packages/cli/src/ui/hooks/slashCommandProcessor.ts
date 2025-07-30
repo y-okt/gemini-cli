@@ -52,6 +52,7 @@ export const useSlashCommandProcessor = (
   openPrivacyNotice: () => void,
   toggleVimEnabled: () => Promise<boolean>,
   setIsProcessing: (isProcessing: boolean) => void,
+  performMemoryRefresh: () => Promise<void>,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -417,6 +418,16 @@ export const useSlashCommandProcessor = (
                     new Set(approvedCommands),
                   );
                 }
+                case 'update_context':
+                  addItem(
+                    {
+                      type: MessageType.INFO,
+                      text: result.message,
+                    },
+                    Date.now(),
+                  );
+                  await performMemoryRefresh();
+                  return { type: 'handled' };
                 default: {
                   const unhandled: never = result;
                   throw new Error(
@@ -474,6 +485,7 @@ export const useSlashCommandProcessor = (
       setShellConfirmationRequest,
       setSessionShellAllowlist,
       setIsProcessing,
+      performMemoryRefresh,
     ],
   );
 

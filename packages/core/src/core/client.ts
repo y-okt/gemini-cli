@@ -171,6 +171,26 @@ export class GeminiClient {
     this.chat = await this.startChat();
   }
 
+  async refreshEnvironment(): Promise<void> {
+    if (!this.chat) {
+      return;
+    }
+
+    const envParts = await this.getEnvironment();
+    const newHistory = this.getChat().getHistory().slice(2);
+    this.getChat().setHistory([
+      {
+        role: 'user',
+        parts: envParts,
+      },
+      {
+        role: 'model',
+        parts: [{ text: 'I see. Thanks for the context!' }],
+      },
+      ...newHistory,
+    ]);
+  }
+
   private async getEnvironment(): Promise<Part[]> {
     const today = new Date().toLocaleDateString(undefined, {
       weekday: 'long',
