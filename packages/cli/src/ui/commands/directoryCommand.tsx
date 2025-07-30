@@ -6,6 +6,21 @@
 
 import { SlashCommand, CommandContext, CommandKind } from './types.js';
 import { MessageType } from '../types.js';
+import * as os from 'os';
+import * as path from 'path';
+
+export function expandHomeDir(p: string): string {
+  if (!p) {
+    return '';
+  }
+  let expandedPath = p;
+  if (p.toLowerCase().startsWith('%userprofile%')) {
+    expandedPath = os.homedir() + p.substring('%userprofile%'.length);
+  } else if (p.startsWith('~')) {
+    expandedPath = os.homedir() + p.substring(1);
+  }
+  return path.normalize(expandedPath);
+}
 
 export const directoryCommand: SlashCommand = {
   name: 'directory',
@@ -75,7 +90,7 @@ export const directoryCommand: SlashCommand = {
 
         for (const pathToAdd of pathsToAdd) {
           try {
-            workspaceContext.addDirectory(pathToAdd.trim());
+            workspaceContext.addDirectory(expandHomeDir(pathToAdd.trim()));
             added.push(pathToAdd.trim());
           } catch (e) {
             const error = e as Error;
