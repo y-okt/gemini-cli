@@ -169,6 +169,8 @@ describe('directoryCommand', () => {
     const windowsPath = '%userprofile%\\Documents';
     const expectedPath = path.win32.join(os.homedir(), 'Documents');
     const result = expandHomeDir(windowsPath);
-    expect(path.win32.normalize(result)).toBe(path.win32.normalize(expectedPath));
+    expect(path.win32.normalize(result)).toBe(
+      path.win32.normalize(expectedPath),
+    );
   });
 });
