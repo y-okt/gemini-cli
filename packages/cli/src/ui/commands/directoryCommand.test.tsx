@@ -5,10 +5,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { directoryCommand } from './directoryCommand.js';
+import { directoryCommand, expandHomeDir } from './directoryCommand.js';
 import { Config, WorkspaceContext } from '@google/gemini-cli-core';
 import { CommandContext } from './types.js';
 import { MessageType } from '../types.js';
+import * as os from 'os';
+import * as path from 'path';
 
 describe('directoryCommand', () => {
   let mockContext: CommandContext;
@@ -162,5 +164,11 @@ describe('directoryCommand', () => {
         expect.any(Number),
       );
     });
+  });
+  it('should correctly expand a Windows-style home directory path', () => {
+    const windowsPath = '%userprofile%\\Documents';
+    const expectedPath = path.win32.join(os.homedir(), 'Documents');
+    const result = expandHomeDir(windowsPath);
+    expect(path.win32.normalize(result)).toBe(path.win32.normalize(expectedPath));
   });
 });
