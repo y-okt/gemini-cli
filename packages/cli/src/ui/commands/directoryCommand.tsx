@@ -93,7 +93,7 @@ export const directoryCommand: SlashCommand = {
         if (added.length > 0) {
           const gemini = config.getGeminiClient();
           if (gemini) {
-            await gemini.refreshEnvironment();
+            await gemini.addDirectoryContext();
           }
           addItem(
             {

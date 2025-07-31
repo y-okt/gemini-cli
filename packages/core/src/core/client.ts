@@ -171,24 +171,33 @@ export class GeminiClient {
     this.chat = await this.startChat();
   }
 
-  async refreshEnvironment(): Promise<void> {
+  async addDirectoryContext(): Promise<void> {
     if (!this.chat) {
       return;
     }
 
-    const envParts = await this.getEnvironment();
-    const newHistory = this.getChat().getHistory().slice(2);
-    this.getChat().setHistory([
-      {
-        role: 'user',
-        parts: envParts,
-      },
-      {
-        role: 'model',
-        parts: [{ text: 'I see. Thanks for the context!' }],
-      },
-      ...newHistory,
-    ]);
+    this.getChat().addHistory({
+      role: 'user',
+      parts: [{ text: await this.getDirectoryContext() }],
+    });
+  }
+
+  private async getDirectoryContext(): Promise<string> {
+    const workspaceContext = this.config.getWorkspaceContext();
+    const workspaceDirectories = workspaceContext.getDirectories();
+
+    const folderStructures = await Promise.all(
+      workspaceDirectories.map((dir) =>
+        getFolderStructure(dir, {
+          fileService: this.config.getFileService(),
+        }),
+      ),
+    );
+
+    const folderStructure = folderStructures.join('\n');
+    const dirList = workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
+    const workingDirPreamble = `I'm currently working in the following directories:\n${dirList}\n Folder structures are as follows:\n${folderStructure}`;
+    return workingDirPreamble;
   }
 
   private async getEnvironment(): Promise<Part[]> {
@@ -228,6 +237,7 @@ export class GeminiClient {
   Today's date is ${today}.
   My operating system is: ${platform}
   ${workingDirPreamble}
+  Here is the folder structure of the current working directories:\n
   ${folderStructure}
           `.trim();
 

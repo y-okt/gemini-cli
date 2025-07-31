@@ -38,7 +38,7 @@ describe('directoryCommand', () => {
       getWorkspaceContext: () => mockWorkspaceContext,
       isRestrictiveSandbox: vi.fn().mockReturnValue(false),
       getGeminiClient: vi.fn().mockReturnValue({
-        refreshEnvironment: vi.fn(),
+        addDirectoryContext: vi.fn(),
       }),
     } as unknown as Config;
 
