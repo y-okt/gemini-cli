@@ -16,7 +16,9 @@ describe('directoryCommand', () => {
   let mockContext: CommandContext;
   let mockConfig: Config;
   let mockWorkspaceContext: WorkspaceContext;
-  const addCommand = directoryCommand.subCommands?.find((c) => c.name === 'add');
+  const addCommand = directoryCommand.subCommands?.find(
+    (c) => c.name === 'add',
+  );
   const showCommand = directoryCommand.subCommands?.find(
     (c) => c.name === 'show',
   );

@@ -30,7 +30,8 @@ export const directoryCommand: SlashCommand = {
   subCommands: [
     {
       name: 'add',
-      description: 'Add directories to the workspace. Use comma to separate multiple paths',
+      description:
+        'Add directories to the workspace. Use comma to separate multiple paths',
       kind: CommandKind.BUILT_IN,
       action: async (context: CommandContext, args: string) => {
         const {
@@ -112,7 +113,7 @@ export const directoryCommand: SlashCommand = {
             Date.now(),
           );
         }
-      }
+      },
     },
     {
       name: 'show',
@@ -143,7 +144,7 @@ export const directoryCommand: SlashCommand = {
           },
           Date.now(),
         );
-      }
-    }
+      },
+    },
   ],
 };
