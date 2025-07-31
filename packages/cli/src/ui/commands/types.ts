@@ -121,15 +121,6 @@ export interface SubmitPromptActionReturn {
 }
 
 /**
- * The return type for a command action that updates the context with
- * additional information, such as a new file path or configuration.
- */
-export interface UpdateContextActionReturn {
-  type: 'update_context';
-  message: string;
-}
-
-/**
  * The return type for a command action that needs to pause and request
  * confirmation for a set of shell commands before proceeding.
  */
@@ -150,8 +141,7 @@ export type SlashCommandActionReturn =
   | OpenDialogActionReturn
   | LoadHistoryActionReturn
   | SubmitPromptActionReturn
-  | ConfirmShellCommandsActionReturn
-  | UpdateContextActionReturn;
+  | ConfirmShellCommandsActionReturn;
 
 export enum CommandKind {
   BUILT_IN = 'built-in',

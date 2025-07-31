@@ -477,7 +477,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openPrivacyNotice,
     toggleVimEnabled,
     setIsProcessing,
-    performMemoryRefresh,
   );
 
   const {
