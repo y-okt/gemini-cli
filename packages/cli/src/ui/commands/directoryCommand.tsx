@@ -27,40 +27,31 @@ export const directoryCommand: SlashCommand = {
   altNames: ['dir'],
   description: 'Manage workspace directories',
   kind: CommandKind.BUILT_IN,
-  action: async (context: CommandContext, args: string) => {
-    const {
-      ui: { addItem },
-      services: { config },
-    } = context;
-    const [subcommand, ...rest] = args.split(' ');
+  subCommands: [
+    {
+      name: 'add',
+      description: 'Add directories to the workspace. Use comma to separate multiple paths',
+      kind: CommandKind.BUILT_IN,
+      action: async (context: CommandContext, args: string) => {
+        const {
+          ui: { addItem },
+          services: { config },
+        } = context;
+        const [...rest] = args.split(' ');
 
-    if (!config) {
-      addItem(
-        {
-          type: MessageType.ERROR,
-          text: 'Configuration is not available.',
-        },
-        Date.now(),
-      );
-      return;
-    }
+        if (!config) {
+          addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Configuration is not available.',
+            },
+            Date.now(),
+          );
+          return;
+        }
 
-    const workspaceContext = config.getWorkspaceContext();
+        const workspaceContext = config.getWorkspaceContext();
 
-    switch (subcommand) {
-      case 'show': {
-        const directories = workspaceContext.getDirectories();
-        const directoryList = directories.map((dir) => `- ${dir}`).join('\n');
-        addItem(
-          {
-            type: MessageType.INFO,
-            text: `Current workspace directories:\n${directoryList}`,
-          },
-          Date.now(),
-        );
-        break;
-      }
-      case 'add': {
         const pathsToAdd = rest
           .join(' ')
           .split(',')
@@ -121,18 +112,38 @@ export const directoryCommand: SlashCommand = {
             Date.now(),
           );
         }
-        break;
       }
-      default: {
+    },
+    {
+      name: 'show',
+      description: 'Show all directories in the workspace',
+      kind: CommandKind.BUILT_IN,
+      action: async (context: CommandContext) => {
+        const {
+          ui: { addItem },
+          services: { config },
+        } = context;
+        if (!config) {
+          addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Configuration is not available.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+        const workspaceContext = config.getWorkspaceContext();
+        const directories = workspaceContext.getDirectories();
+        const directoryList = directories.map((dir) => `- ${dir}`).join('\n');
         addItem(
           {
-            type: MessageType.ERROR,
-            text: 'Invalid subcommand. Available subcommands: add, show',
+            type: MessageType.INFO,
+            text: `Current workspace directories:\n${directoryList}`,
           },
           Date.now(),
         );
-        break;
       }
     }
-  },
+  ],
 };
