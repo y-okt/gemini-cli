@@ -288,12 +288,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       config.setGeminiMdFileCount(fileCount);
       setGeminiMdFileCount(fileCount);
 
-      if (config.shouldClearWorkspaceDirsOnRefresh()) {
-        config
-          .getWorkspaceContext()
-          .setDirectories(config.getWorkspaceContext().getInitialDirectories());
-      }
-
       addItem(
         {
           type: MessageType.INFO,

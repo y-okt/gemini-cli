@@ -66,7 +66,7 @@ export interface CliArgs {
   ideModeFeature: boolean | undefined;
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
-  clearWorkspaceDirsOnRefresh?: boolean | undefined;
+  loadMemoryFromIncludeDirectories: boolean | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -214,10 +214,10 @@ export async function parseArguments(): Promise<CliArgs> {
         // Handle comma-separated values
         dirs.flatMap((dir) => dir.split(',').map((d) => d.trim())),
     })
-    .option('clear-workspace-dirs-on-refresh', {
+    .option('load-memory-from-include-directories', {
       type: 'boolean',
       description:
-        'If true, when refreshing memory, reset the directories from the previous run. If false, when refreshing memory, directory settings from the previous run will be preserved.',
+        'If true, when refreshing memory, GEMINI.md files should be loaded from all directories that are added. If false, GEMINI.md files should only be loaded from the primary working directory.',
       default: false,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
@@ -406,9 +406,9 @@ export async function loadCliConfig(
     sandbox: sandboxConfig,
     targetDir: process.cwd(),
     includeDirectories,
-    clearWorkspaceDirsOnRefresh:
-      argv.clearWorkspaceDirsOnRefresh ||
-      settings.clearWorkspaceDirsOnRefresh ||
+    loadMemoryFromIncludeDirectories:
+      argv.loadMemoryFromIncludeDirectories ||
+      settings.loadMemoryFromIncludeDirectories ||
       false,
     debugMode,
     question: argv.promptInteractive || argv.prompt || '',

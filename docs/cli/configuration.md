@@ -259,12 +259,12 @@ In addition to a project settings file, a project's `.gemini` directory can cont
     ]
     ```
 
-- **`clearWorkspaceDirsOnRefresh`** (boolean):
-  - **Description:** Controls the behavior of the `/memory refresh` command. If set to `true`, any directories added to the workspace during the session (e.g., via the `/directory add` command) will be removed upon refresh, resetting the workspace to its initial state (the current working directory plus any paths from the `includeDirectories` setting). If `false`, dynamically added directories persist across refreshes.
+- **`loadMemoryFromIncludeDirectories`** (boolean):
+  - **Description:** Controls the behavior of the `/memory refresh` command. If set to `true`, `GEMINI.md` files should be loaded from all directories that are added. If set to `false`, `GEMINI.md` should only be loaded from the current directory.
   - **Default:** `false`
   - **Example:**
     ```json
-    "clearWorkspaceDirsOnRefresh": true
+    "loadMemoryFromIncludeDirectories": true
     ```
 
 ### Example `settings.json`:
@@ -300,6 +300,9 @@ In addition to a project settings file, a project's `.gemini` directory can cont
     }
   },
   "excludedProjectEnvVars": ["DEBUG", "DEBUG_MODE", "NODE_ENV"]
+  "includeDirectories: [
+
+  ]
 }
 ```
 
