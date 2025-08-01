@@ -116,7 +116,7 @@ export interface Settings {
 
   includeDirectories?: string[];
 
-  clearWorkspaceDirsOnRefresh?: boolean;
+  loadMemoryFromIncludeDirectories?: boolean;
 }
 
 export interface SettingsError {
