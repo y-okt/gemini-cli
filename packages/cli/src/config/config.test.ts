@@ -1020,16 +1020,17 @@ describe('loadCliConfig ideModeFeature', () => {
 
 vi.mock('fs', async () => {
   const actualFs = await vi.importActual<typeof fs>('fs');
-  const MOCK_CWD = process.cwd();
-  const MOCK_HOME = '/mock/home/user';
+  const MOCK_CWD1 = process.cwd();
+  const MOCK_CWD2 = path.resolve(path.sep, 'home', 'user', 'project');
 
   const mockPaths = new Set([
-    MOCK_CWD,
-    '/cli/path1',
-    '/settings/path1',
-    path.join(MOCK_HOME, 'settings/path2'),
-    path.join(MOCK_CWD, 'cli/path2'),
-    path.join(MOCK_CWD, 'settings/path3'),
+    MOCK_CWD1,
+    MOCK_CWD2,
+    path.resolve(path.sep, 'cli', 'path1'),
+    path.resolve(path.sep, 'settings', 'path1'),
+    path.join(os.homedir(), 'settings', 'path2'),
+    path.join(MOCK_CWD2, 'cli', 'path2'),
+    path.join(MOCK_CWD2, 'settings', 'path3'),
   ]);
 
   return {
@@ -1054,6 +1055,9 @@ describe('loadCliConfig with includeDirectories', () => {
     vi.resetAllMocks();
     vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
     process.env.GEMINI_API_KEY = 'test-api-key';
+    vi.spyOn(process, 'cwd').mockReturnValue(
+      path.resolve(path.sep, 'home', 'user', 'project'),
+    );
   });
 
   afterEach(() => {
@@ -1070,22 +1074,22 @@ describe('loadCliConfig with includeDirectories', () => {
       '/cli/path1,./cli/path2',
     ];
     const argv = await parseArguments();
+    const mockCwd = path.resolve(path.sep, 'home', 'user', 'project');
     const settings: Settings = {
       includeDirectories: [
-        '/settings/path1',
-        '~/settings/path2',
-        './settings/path3',
+        path.resolve(path.sep, 'settings', 'path1'),
+        path.join(os.homedir(), 'settings', 'path2'),
+        path.join(mockCwd, 'settings', 'path3'),
       ],
     };
     const config = await loadCliConfig(settings, [], 'test-session', argv);
-    const CWD = process.cwd();
     const expected = [
-      CWD,
-      '/cli/path1',
-      path.join(CWD, 'cli/path2'),
-      '/settings/path1',
-      path.join(os.homedir(), 'settings/path2'),
-      path.join(CWD, 'settings/path3'),
+      mockCwd,
+      path.resolve(path.sep, 'cli', 'path1'),
+      path.join(mockCwd, 'cli', 'path2'),
+      path.resolve(path.sep, 'settings', 'path1'),
+      path.join(os.homedir(), 'settings', 'path2'),
+      path.join(mockCwd, 'settings', 'path3'),
     ];
     expect(config.getWorkspaceContext().getDirectories()).toEqual(
       expect.arrayContaining(expected),
