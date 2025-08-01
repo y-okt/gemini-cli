@@ -8,6 +8,7 @@ import { SlashCommand, CommandContext, CommandKind } from './types.js';
 import { MessageType } from '../types.js';
 import * as os from 'os';
 import * as path from 'path';
+import { loadServerHierarchicalMemory } from '@google/gemini-cli-core';
 
 export function expandHomeDir(p: string): string {
   if (!p) {
@@ -88,6 +89,29 @@ export const directoryCommand: SlashCommand = {
             const error = e as Error;
             errors.push(`Error adding '${pathToAdd.trim()}': ${error.message}`);
           }
+        }
+
+        try {
+          const { memoryContent, fileCount } =
+            await loadServerHierarchicalMemory(
+              config.getWorkingDir(),
+              config.shouldLoadMemoryFromIncludeDirectories()
+                ? [
+                    ...config.getWorkspaceContext().getDirectories(),
+                    ...pathsToAdd,
+                  ]
+                : [],
+              config.getDebugMode(),
+              config.getFileService(),
+              config.getExtensionContextFilePaths(),
+              context.services.settings.merged.memoryImportFormat || 'tree', // Use setting or default to 'tree'
+              config.getFileFilteringOptions(),
+              context.services.settings.merged.memoryDiscoveryMaxDirs,
+            );
+          config.setUserMemory(memoryContent);
+          config.setGeminiMdFileCount(fileCount);
+        } catch (error) {
+          errors.push(`Error refreshing memory: ${(error as Error).message}`);
         }
 
         if (added.length > 0) {

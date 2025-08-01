@@ -248,6 +248,7 @@ export async function parseArguments(): Promise<CliArgs> {
 // TODO: Consider if App.tsx should get memory via a server call or if Config should refresh itself.
 export async function loadHierarchicalGeminiMemory(
   currentWorkingDirectory: string,
+  includeDirectoriesToReadGemini: readonly string[] = [],
   debugMode: boolean,
   fileService: FileDiscoveryService,
   settings: Settings,
@@ -273,6 +274,7 @@ export async function loadHierarchicalGeminiMemory(
   // Directly call the server function with the corrected path.
   return loadServerHierarchicalMemory(
     effectiveCwd,
+    includeDirectoriesToReadGemini,
     debugMode,
     fileService,
     extensionContextFilePaths,
@@ -336,9 +338,14 @@ export async function loadCliConfig(
     ...settings.fileFiltering,
   };
 
+  const includeDirectories = (settings.includeDirectories || [])
+    .map(resolvePath)
+    .concat((argv.includeDirectories || []).map(resolvePath));
+
   // Call the (now wrapper) loadHierarchicalGeminiMemory which calls the server's version
   const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(
     process.cwd(),
+    settings.loadMemoryFromIncludeDirectories ? includeDirectories : [],
     debugMode,
     fileService,
     settings,
@@ -398,10 +405,6 @@ export async function loadCliConfig(
   }
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
-
-  const includeDirectories = (settings.includeDirectories || [])
-    .map(resolvePath)
-    .concat((argv.includeDirectories || []).map(resolvePath));
 
   return new Config({
     sessionId,
