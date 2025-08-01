@@ -16,7 +16,7 @@ export function expandHomeDir(p: string): string {
   let expandedPath = p;
   if (p.toLowerCase().startsWith('%userprofile%')) {
     expandedPath = os.homedir() + p.substring('%userprofile%'.length);
-  } else if (p.startsWith('~')) {
+  } else if (p === '~' || p.startsWith('~/')) {
     expandedPath = os.homedir() + p.substring(1);
   }
   return path.normalize(expandedPath);

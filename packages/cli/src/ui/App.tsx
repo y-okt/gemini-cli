@@ -90,7 +90,6 @@ import { ShowMoreLines } from './components/ShowMoreLines.js';
 import { PrivacyNotice } from './privacy/PrivacyNotice.js';
 import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from '../utils/events.js';
-import { resolvePath } from '../utils/resolvePath.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 
@@ -292,10 +291,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       setGeminiMdFileCount(fileCount);
 
       if (config.shouldClearWorkspaceDirsOnRefresh()) {
-        const includeDirectories = (
-          settings.merged.includeDirectories || []
-        ).map(resolvePath);
-        config.getWorkspaceContext().setDirectories(includeDirectories || []);
+        config
+          .getWorkspaceContext()
+          .setDirectories(config.getWorkspaceContext().getInitialDirectories());
       }
 
       addItem(
