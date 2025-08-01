@@ -1067,14 +1067,14 @@ describe('loadCliConfig with includeDirectories', () => {
   });
 
   it('should combine and resolve paths from settings and CLI arguments', async () => {
+    const mockCwd = path.resolve(path.sep, 'home', 'user', 'project');
     process.argv = [
       'node',
       'script.js',
       '--include-directories',
-      '/cli/path1,./cli/path2',
+      `${path.resolve(path.sep, 'cli', 'path1')},${path.join(mockCwd, 'cli', 'path2')}`,
     ];
     const argv = await parseArguments();
-    const mockCwd = path.resolve(path.sep, 'home', 'user', 'project');
     const settings: Settings = {
       includeDirectories: [
         path.resolve(path.sep, 'settings', 'path1'),
