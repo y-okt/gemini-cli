@@ -246,6 +246,25 @@ In addition to a project settings file, a project's `.gemini` directory can cont
   - **Example:**
     ```json
     "excludedProjectEnvVars": ["DEBUG", "DEBUG_MODE", "NODE_ENV"]
+
+- **`includeDirectories`** (array of strings):
+  - **Description:** Specifies an array of additional absolute or relative paths to include in the workspace context. This allows you to work with files across multiple directories as if they were one. Paths can use `~` to refer to the user's home directory. This setting can be combined with the `--include-directories` command-line flag.
+  - **Default:** `[]`
+  - **Example:**
+    ```json
+    "includeDirectories": [
+      "/path/to/another/project",
+      "../shared-library",
+      "~/common-utils"
+    ]
+    ```
+
+- **`clearWorkspaceDirsOnRefresh`** (boolean):
+  - **Description:** Controls the behavior of the `/memory refresh` command. If set to `true`, any directories added to the workspace during the session (e.g., via the `/directory add` command) will be removed upon refresh, resetting the workspace to its initial state (the current working directory plus any paths from the `includeDirectories` setting). If `false`, dynamically added directories persist across refreshes.
+  - **Default:** `false`
+  - **Example:**
+    ```json
+    "clearWorkspaceDirsOnRefresh": true
     ```
 
 ### Example `settings.json`:
