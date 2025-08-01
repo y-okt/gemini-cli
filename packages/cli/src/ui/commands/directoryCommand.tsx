@@ -19,7 +19,7 @@ export function expandHomeDir(p: string): string {
   } else if (p === '~' || p.startsWith('~/')) {
     expandedPath = os.homedir() + p.substring(1);
   }
-  return path.normalize(expandedPath);
+  return path.resolve(expandedPath);
 }
 
 export const directoryCommand: SlashCommand = {
