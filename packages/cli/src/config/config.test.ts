@@ -6,6 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as os from 'os';
+import * as fs from 'fs';
+import * as path from 'path';
 import { loadCliConfig, parseArguments } from './config.js';
 import { Settings } from './settings.js';
 import { Extension } from './extension.js';
@@ -1013,5 +1015,83 @@ describe('loadCliConfig ideModeFeature', () => {
     const settings: Settings = { ideModeFeature: true };
     const config = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getIdeModeFeature()).toBe(false);
+  });
+});
+
+vi.mock('fs', async () => {
+  const actualFs = await vi.importActual<typeof fs>('fs');
+  const MOCK_CWD = process.cwd();
+  const MOCK_HOME = '/mock/home/user';
+
+  const mockPaths = new Set([
+    MOCK_CWD,
+    '/cli/path1',
+    '/settings/path1',
+    path.join(MOCK_HOME, 'settings/path2'),
+    path.join(MOCK_CWD, 'cli/path2'),
+    path.join(MOCK_CWD, 'settings/path3'),
+  ]);
+
+  return {
+    ...actualFs,
+    existsSync: vi.fn((p) => mockPaths.has(p.toString())),
+    statSync: vi.fn((p) => {
+      if (mockPaths.has(p.toString())) {
+        return { isDirectory: () => true };
+      }
+      // Fallback for other paths if needed, though the test should be specific.
+      return actualFs.statSync(p);
+    }),
+    realpathSync: vi.fn((p) => p),
+  };
+});
+
+describe('loadCliConfig with includeDirectories', () => {
+  const originalArgv = process.argv;
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
+    process.env.GEMINI_API_KEY = 'test-api-key';
+  });
+
+  afterEach(() => {
+    process.argv = originalArgv;
+    process.env = originalEnv;
+    vi.restoreAllMocks();
+  });
+
+  it('should combine and resolve paths from settings and CLI arguments', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--include-directories',
+      '/cli/path1,./cli/path2',
+    ];
+    const argv = await parseArguments();
+    const settings: Settings = {
+      includeDirectories: [
+        '/settings/path1',
+        '~/settings/path2',
+        './settings/path3',
+      ],
+    };
+    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const CWD = process.cwd();
+    const expected = [
+      CWD,
+      '/cli/path1',
+      path.join(CWD, 'cli/path2'),
+      '/settings/path1',
+      path.join(os.homedir(), 'settings/path2'),
+      path.join(CWD, 'settings/path3'),
+    ];
+    expect(config.getWorkspaceContext().getDirectories()).toEqual(
+      expect.arrayContaining(expected),
+    );
+    expect(config.getWorkspaceContext().getDirectories()).toHaveLength(
+      expected.length,
+    );
   });
 });

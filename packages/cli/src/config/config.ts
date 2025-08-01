@@ -29,6 +29,7 @@ import { Settings } from './settings.js';
 import { Extension, annotateActiveExtensions } from './extension.js';
 import { getCliVersion } from '../utils/version.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
+import { resolvePath } from '../utils/resolvePath.js';
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -65,6 +66,7 @@ export interface CliArgs {
   ideModeFeature: boolean | undefined;
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
+  clearWorkspaceDirsOnRefresh?: boolean | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -211,6 +213,12 @@ export async function parseArguments(): Promise<CliArgs> {
       coerce: (dirs: string[]) =>
         // Handle comma-separated values
         dirs.flatMap((dir) => dir.split(',').map((d) => d.trim())),
+    })
+    .option('clear-workspace-dirs-on-refresh', {
+      type: 'boolean',
+      description:
+        'If true, when refreshing memory, reset the directories from the previous run. If false, when refreshing memory, directory settings from the previous run will be preserved.',
+      default: false,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
@@ -388,12 +396,20 @@ export async function loadCliConfig(
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
+  const includeDirectories = (settings.includeDirectories || [])
+    .map(resolvePath)
+    .concat((argv.includeDirectories || []).map(resolvePath));
+
   return new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
     sandbox: sandboxConfig,
     targetDir: process.cwd(),
-    includeDirectories: argv.includeDirectories,
+    includeDirectories,
+    clearWorkspaceDirsOnRefresh:
+      argv.clearWorkspaceDirsOnRefresh ||
+      settings.clearWorkspaceDirsOnRefresh ||
+      false,
     debugMode,
     question: argv.promptInteractive || argv.prompt || '',
     fullContext: argv.allFiles || argv.all_files || false,

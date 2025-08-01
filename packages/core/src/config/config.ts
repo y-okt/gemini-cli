@@ -175,6 +175,7 @@ export interface ConfigParameters {
   cwd: string;
   fileDiscoveryService?: FileDiscoveryService;
   includeDirectories?: string[];
+  clearWorkspaceDirsOnRefresh?: boolean;
   bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
@@ -204,6 +205,7 @@ export class Config {
   private readonly fullContext: boolean;
   private readonly coreTools: string[] | undefined;
   private readonly excludeTools: string[] | undefined;
+  private readonly clearWorkspaceDirsOnRefresh: boolean;
   private readonly toolDiscoveryCommand: string | undefined;
   private readonly toolCallCommand: string | undefined;
   private readonly mcpServerCommand: string | undefined;
@@ -304,6 +306,8 @@ export class Config {
     this.ideModeFeature = params.ideModeFeature ?? false;
     this.ideMode = params.ideMode ?? false;
     this.ideClient = params.ideClient;
+    this.clearWorkspaceDirsOnRefresh =
+      params.clearWorkspaceDirsOnRefresh ?? false;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -382,6 +386,10 @@ export class Config {
 
   isInFallbackMode(): boolean {
     return this.inFallbackMode;
+  }
+
+  shouldClearWorkspaceDirsOnRefresh(): boolean {
+    return this.clearWorkspaceDirsOnRefresh;
   }
 
   setFallbackMode(active: boolean): void {
