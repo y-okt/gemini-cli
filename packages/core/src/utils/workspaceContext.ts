@@ -77,6 +77,13 @@ export class WorkspaceContext {
     return Array.from(this.directories);
   }
 
+  setDirectories(directories: string[]): void {
+    this.directories.clear();
+    for (const dir of directories) {
+      this.addDirectoryInternal(dir);
+    }
+  }
+
   /**
    * Checks if a given path is within any of the workspace directories.
    * @param pathToCheck The path to validate

@@ -113,6 +113,10 @@ export interface Settings {
 
   memoryDiscoveryMaxDirs?: number;
   dnsResolutionOrder?: DnsResolutionOrder;
+
+  includeDirectories?: string[];
+
+  clearWorkspaceDirsOnRefresh?: boolean;
 }
 
 export interface SettingsError {
@@ -168,6 +172,11 @@ export class LoadedSettings {
         ...(workspace.mcpServers || {}),
         ...(system.mcpServers || {}),
       },
+      includeDirectories: [
+        ...(system.includeDirectories || []),
+        ...(user.includeDirectories || []),
+        ...(workspace.includeDirectories || []),
+      ],
     };
   }
 
