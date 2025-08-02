@@ -336,6 +336,5 @@ export async function loadServerHierarchicalMemory(
     logger.debug(
       `Combined instructions (snippet): ${combinedInstructions.substring(0, 500)}...`,
     );
-  console.error(filePaths);
   return { memoryContent: combinedInstructions, fileCount: filePaths.length };
 }
