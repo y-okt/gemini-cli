@@ -108,7 +108,7 @@ async function getGeminiMdFilePathsInternal(
     );
     paths.push(...pathsByDir);
   }
-  return paths;
+  return Array.from(new Set<string>(paths));
 }
 
 async function getGeminiMdFilePathsInternalForEachDir(
@@ -336,5 +336,6 @@ export async function loadServerHierarchicalMemory(
     logger.debug(
       `Combined instructions (snippet): ${combinedInstructions.substring(0, 500)}...`,
     );
+  console.error(filePaths);
   return { memoryContent: combinedInstructions, fileCount: filePaths.length };
 }

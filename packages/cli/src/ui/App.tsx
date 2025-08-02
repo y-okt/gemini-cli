@@ -486,6 +486,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openPrivacyNotice,
     toggleVimEnabled,
     setIsProcessing,
+    setGeminiMdFileCount,
   );
 
   const {
@@ -606,7 +607,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
-  }, [config]);
+  }, [config, config.getGeminiMdFileCount]);
 
   const logger = useLogger();
   const [userMessages, setUserMessages] = useState<string[]>([]);
