@@ -292,9 +292,12 @@ In addition to a project settings file, a project's `.gemini` directory can cont
       "tokenBudget": 100
     }
   },
-  "includeDirectories: [
-
-  ]
+  "includeDirectories": [
+    "path/to/dir1",
+    "~/path/to/dir2",
+    "../path/to/dir3"
+  ],
+  "loadMemoryFromIncludeDirectories": true
 }
 ```
 
