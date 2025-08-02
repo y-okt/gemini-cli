@@ -299,10 +299,13 @@ In addition to a project settings file, a project's `.gemini` directory can cont
       "tokenBudget": 100
     }
   },
-  "excludedProjectEnvVars": ["DEBUG", "DEBUG_MODE", "NODE_ENV"]
-  "includeDirectories: [
-
-  ]
+  "excludedProjectEnvVars": ["DEBUG", "DEBUG_MODE", "NODE_ENV"],
+  "includeDirectories": [
+    "path/to/dir1",
+    "~/path/to/dir2",
+    "../path/to/dir3"
+  ],
+  "loadMemoryFromIncludeDirectories": true
 }
 ```
 
