@@ -246,6 +246,7 @@ In addition to a project settings file, a project's `.gemini` directory can cont
   - **Example:**
     ```json
     "excludedProjectEnvVars": ["DEBUG", "DEBUG_MODE", "NODE_ENV"]
+    ```
 
 - **`includeDirectories`** (array of strings):
   - **Description:** Specifies an array of additional absolute or relative paths to include in the workspace context. This allows you to work with files across multiple directories as if they were one. Paths can use `~` to refer to the user's home directory. This setting can be combined with the `--include-directories` command-line flag.
