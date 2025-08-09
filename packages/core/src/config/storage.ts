@@ -88,4 +88,32 @@ export class Storage {
     fs.mkdirSync(historyDir, { recursive: true }); // Ensure it exists
     return path.join(historyDir, hash);
   }
+
+  getGlobalSettingsPath(): string {
+    return path.join(this.getGlobalGeminiDir(), 'settings.json');
+  }
+
+  getWorkspaceSettingsPath(): string {
+    return path.join(this.getGeminiDir(), 'settings.json');
+  }
+
+  getUserCommandsDir(): string {
+    return path.join(this.getGlobalGeminiDir(), 'commands');
+  }
+
+  getProjectCommandsDir(): string {
+    return path.join(this.getGeminiDir(), 'commands');
+  }
+
+  getMcpOAuthTokensPath(): string {
+    return path.join(this.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');
+  }
+
+  getGlobalFilePath(...segments: string[]): string {
+    return path.join(this.getGlobalGeminiDir(), ...segments);
+  }
+
+  getProjectFilePath(...segments: string[]): string {
+    return path.join(this.getGeminiDir(), ...segments);
+  }
 }

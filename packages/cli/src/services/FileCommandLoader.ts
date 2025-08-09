@@ -9,11 +9,8 @@ import path from 'path';
 import toml from '@iarna/toml';
 import { glob } from 'glob';
 import { z } from 'zod';
-import {
-  Config,
-  getProjectCommandsDir,
-  getUserCommandsDir,
-} from '@google/gemini-cli-core';
+import { Config } from '@google/gemini-cli-core';
+import { Storage } from '@google/gemini-cli-core/src/config/storage.js';
 import { ICommandLoader } from './types.js';
 import {
   CommandContext,
@@ -130,11 +127,14 @@ export class FileCommandLoader implements ICommandLoader {
   private getCommandDirectories(): CommandDirectory[] {
     const dirs: CommandDirectory[] = [];
 
+    const globalStorage = new Storage(process.cwd());
+    const projectStorage = new Storage(this.projectRoot);
+
     // 1. User commands
-    dirs.push({ path: getUserCommandsDir() });
+    dirs.push({ path: globalStorage.getUserCommandsDir() });
 
     // 2. Project commands (override user commands)
-    dirs.push({ path: getProjectCommandsDir(this.projectRoot) });
+    dirs.push({ path: projectStorage.getProjectCommandsDir() });
 
     // 3. Extension commands (processed last to detect all conflicts)
     if (this.config) {
