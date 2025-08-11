@@ -109,11 +109,7 @@ export class Storage {
     return path.join(this.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');
   }
 
-  getGlobalFilePath(...segments: string[]): string {
-    return path.join(this.getGlobalGeminiDir(), ...segments);
-  }
-
-  getProjectFilePath(...segments: string[]): string {
-    return path.join(this.getGeminiDir(), ...segments);
+  getProjectTempCheckpointsDir(): string {
+    return path.join(this.getProjectTempDir(), 'checkpoints');
   }
 }

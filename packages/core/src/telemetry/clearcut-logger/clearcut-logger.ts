@@ -146,7 +146,7 @@ export class ClearcutLogger {
    */
   private pendingFlush: boolean = false;
 
-  private constructor(config?: Config) {
+  private constructor(config: Config) {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
     this.promptId = config?.getSessionId() ?? '';
@@ -203,7 +203,9 @@ export class ClearcutLogger {
     if (eventName !== EventNames.START_SESSION) {
       data.push(...this.sessionData);
     }
-    data = this.addDefaultFields(data);
+    const totalAccounts = this.userAccountManager.getLifetimeGoogleAccounts();
+
+    data = addDefaultFields(data, totalAccounts);
 
     const logEvent: LogEvent = {
       console_type: 'GEMINI_CLI',
@@ -675,8 +677,7 @@ export class ClearcutLogger {
    * Adds default fields to data, and returns a new data array.  This fields
    * should exist on all log events.
    */
-  addDefaultFields(data: EventValue[]): EventValue[] {
-    const totalAccounts = getLifetimeGoogleAccounts();
+  addDefaultFields(data: EventValue[], totalAccounts: number): EventValue[] {
     const surface = determineSurface();
 
     const defaultLogMetadata: EventValue[] = [

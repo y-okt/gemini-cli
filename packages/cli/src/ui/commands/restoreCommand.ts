@@ -12,7 +12,7 @@ import {
   type SlashCommandActionReturn,
   CommandKind,
 } from './types.js';
-import { Config } from '@google/gemini-cli-core';
+import { Config, Storage } from '@google/gemini-cli-core';
 
 async function restoreAction(
   context: CommandContext,
@@ -22,8 +22,8 @@ async function restoreAction(
   const { config, git: gitService } = services;
   const { addItem, loadHistory } = ui;
 
-  const checkpointDir = config?.getProjectTempDir()
-    ? path.join(config.getProjectTempDir(), 'checkpoints')
+    const checkpointDir = config
+    ? new Storage(config.getProjectRoot()).getProjectTempCheckpointsDir()
     : undefined;
 
   if (!checkpointDir) {
@@ -125,9 +125,7 @@ async function completion(
 ): Promise<string[]> {
   const { services } = context;
   const { config } = services;
-  const checkpointDir = config?.getProjectTempDir()
-    ? path.join(config.getProjectTempDir(), 'checkpoints')
-    : undefined;
+  const checkpointDir = config ? new Storage(config.getProjectRoot()).getProjectTempCheckpointsDir() : undefined;
   if (!checkpointDir) {
     return [];
   }

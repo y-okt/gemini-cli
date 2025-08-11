@@ -5,8 +5,7 @@
  */
 
 import * as path from 'node:path';
-import { Config } from '@google/gemini-cli-core';
-import { Storage } from '@google/gemini-cli-core/src/config/storage.js';
+import { Config, Storage } from '@google/gemini-cli-core';
 import mock from 'mock-fs';
 import { FileCommandLoader } from './FileCommandLoader.js';
 import { assert, vi } from 'vitest';
@@ -54,6 +53,7 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
     await importOriginal<typeof import('@google/gemini-cli-core')>();
   return {
     ...original,
+    Storage: original.Storage,
     isCommandAllowed: vi.fn(),
     ShellExecutionService: {
       execute: vi.fn(),
