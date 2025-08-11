@@ -121,7 +121,7 @@ const MAX_RETRY_EVENTS = 100;
 // is checked and events are flushed to Clearcut if at least a minute has passed since the last flush.
 export class ClearcutLogger {
   private static instance: ClearcutLogger;
-  private readonly config?: Config;
+  private readonly config: Config;
   private readonly installationManager: InstallationManager;
   private readonly userAccountManager: UserAccountManager;
   private readonly events: FixedDeque<LogEventEntry[]>;
@@ -142,7 +142,7 @@ export class ClearcutLogger {
    */
   private pendingFlush: boolean = false;
 
-  private constructor(config?: Config) {
+  private constructor(config: Config) {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
     this.installationManager = new InstallationManager(config.storage);
@@ -193,9 +193,10 @@ export class ClearcutLogger {
   }
 
   createLogEvent(name: string, data: EventValue[]): LogEvent {
-    const email = getCachedGoogleAccount();
+    const email = this.userAccountManager.getCachedGoogleAccount();
+    const totalAccounts = this.userAccountManager.getLifetimeGoogleAccounts();
 
-    data = addDefaultFields(data);
+    data = addDefaultFields(data, totalAccounts);
 
     const logEvent: LogEvent = {
       console_type: 'GEMINI_CLI',
@@ -790,8 +791,7 @@ export class ClearcutLogger {
  * Adds default fields to data, and returns a new data array.  This fields
  * should exist on all log events.
  */
-function addDefaultFields(data: EventValue[]): EventValue[] {
-  const totalAccounts = getLifetimeGoogleAccounts();
+function addDefaultFields(data: EventValue[], totalAccounts: number): EventValue[] {
   const surface = determineSurface();
   const defaultLogMetadata: EventValue[] = [
     {
