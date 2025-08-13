@@ -62,8 +62,7 @@ export class Storage {
   }
 
   getOAuthCredsPath(): string {
-    const tempDir = this.getGlobalTempDir();
-    return path.join(tempDir, 'oauth_creds.json');
+    return path.join(this.getGlobalGeminiDir(), 'oauth_creds.json');
   }
 
   getProjectRoot(): string {

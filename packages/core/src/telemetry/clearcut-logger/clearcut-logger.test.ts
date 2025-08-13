@@ -74,7 +74,6 @@ expect.extend({
 vi.mock('../../utils/userAccountManager.js');
 vi.mock('../../utils/installationManager.js');
 
-const mockHttps = vi.mocked(https);
 const mockUserAccount = vi.mocked(UserAccountManager.prototype);
 const mockInstallMgr = vi.mocked(InstallationManager.prototype);
 
@@ -114,7 +113,6 @@ describe('ClearcutLogger', () => {
     config = {} as Partial<ConfigParameters>,
     lifetimeGoogleAccounts = 1,
     cachedGoogleAccount = 'test@google.com',
-    installationId = 'test-installation-id',
   } = {}) {
     server.resetHandlers(
       http.post(CLEARCUT_URL, () => HttpResponse.text(EXAMPLE_RESPONSE)),
@@ -132,7 +130,9 @@ describe('ClearcutLogger', () => {
     mockUserAccount.getLifetimeGoogleAccounts.mockReturnValue(
       lifetimeGoogleAccounts,
     );
-    mockInstallMgr.getInstallationId = vi.fn().mockReturnValue('test-installation-id');
+    mockInstallMgr.getInstallationId = vi
+      .fn()
+      .mockReturnValue('test-installation-id');
 
     const logger = ClearcutLogger.getInstance(loggerConfig);
 

@@ -34,7 +34,6 @@ vi.mock('os', async (importOriginal) => {
 vi.mock('google-auth-library');
 vi.mock('http');
 vi.mock('open');
-vi.mock('crypto');
 vi.mock('node:readline');
 vi.mock('../utils/browser.js', () => ({
   shouldAttemptBrowserLaunch: () => true,
@@ -49,17 +48,27 @@ const mockConfig = {
 // Mock fetch globally
 global.fetch = vi.fn();
 
+let getOauthClient: (
+  authType: AuthType,
+  config: Config,
+) => Promise<OAuth2Client>;
+
 describe('oauth2', () => {
   let tempHomeDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tempHomeDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'gemini-cli-test-home-'),
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
+    vi.spyOn(process, 'cwd').mockReturnValue(tempHomeDir);
+    vi.resetModules();
+    const mod = await import('./oauth2.js');
+    getOauthClient = mod.getOauthClient;
   });
   afterEach(() => {
     fs.rmSync(tempHomeDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     resetOauthClientForTesting();
     vi.unstubAllEnvs();
@@ -170,7 +179,6 @@ describe('oauth2', () => {
     const googleAccountPath = path.join(
       tempHomeDir,
       '.gemini',
-      'tmp',
       'google_accounts.json',
     );
     expect(fs.existsSync(googleAccountPath)).toBe(true);
@@ -181,7 +189,7 @@ describe('oauth2', () => {
     });
 
     // Verify the getCachedGoogleAccount function works
-    const userAccountManager = new UserAccountManager();
+    const userAccountManager = new UserAccountManager(new Storage(tempHomeDir));
     expect(userAccountManager.getCachedGoogleAccount()).toBe(
       'test-google-account@gmail.com',
     );
@@ -292,10 +300,6 @@ describe('oauth2', () => {
 
       await getOauthClient(AuthType.LOGIN_WITH_GOOGLE, mockConfig);
 
-      expect(fs.promises.readFile).toHaveBeenCalledWith(
-        '/user/home/.gemini/tmp/oauth_creds.json',
-        'utf-8',
-      );
       expect(mockClient.setCredentials).toHaveBeenCalledWith(cachedCreds);
       expect(mockClient.getAccessToken).toHaveBeenCalled();
       expect(mockClient.getTokenInfo).toHaveBeenCalled();

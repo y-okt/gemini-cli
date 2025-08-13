@@ -97,10 +97,7 @@ interface SaveMemoryParams {
 
 function getGlobalMemoryFilePath(): string {
   const storage = new Storage(process.cwd());
-  return path.join(
-    storage.getGlobalGeminiDir(),
-    getCurrentGeminiMdFilename(),
-  );
+  return path.join(storage.getGlobalGeminiDir(), getCurrentGeminiMdFilename());
 }
 
 /**

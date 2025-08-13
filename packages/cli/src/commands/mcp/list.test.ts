@@ -11,10 +11,24 @@ import { loadExtensions } from '../../config/extension.js';
 import { createTransport } from '@google/gemini-cli-core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
-vi.mock('../../config/settings.js');
-vi.mock('../../config/extension.js');
-vi.mock('@google/gemini-cli-core');
-vi.mock('@modelcontextprotocol/sdk/client/index.js');
+vi.mock('../../config/settings.js', () => ({
+  loadSettings: vi.fn(),
+}));
+vi.mock('../../config/extension.js', () => ({
+  loadExtensions: vi.fn(),
+}));
+vi.mock('@google/gemini-cli-core', async () => {
+  const actual = await vi.importActual<
+    typeof import('@google/gemini-cli-core')
+  >('@google/gemini-cli-core');
+  return {
+    ...actual,
+    createTransport: vi.fn(),
+  };
+});
+vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
+  Client: vi.fn(),
+}));
 
 const mockedLoadSettings = loadSettings as vi.Mock;
 const mockedLoadExtensions = loadExtensions as vi.Mock;

@@ -12,6 +12,15 @@ import * as os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'crypto';
 
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    readFileSync: vi.fn(actual.readFileSync),
+    existsSync: vi.fn(actual.existsSync),
+  } as typeof actual;
+});
+
 vi.mock('os', async (importOriginal) => {
   const os = await importOriginal<typeof import('os')>();
   return {
@@ -33,7 +42,7 @@ describe('InstallationManager', () => {
   let installationManager: InstallationManager;
   let storage: Storage;
   const installationIdFile = () =>
-    path.join(tempHomeDir, '.gemini', 'tmp', 'installation_id');
+    path.join(tempHomeDir, '.gemini', 'installation_id');
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
@@ -78,12 +87,11 @@ describe('InstallationManager', () => {
     });
 
     it('should handle read errors and return a fallback ID', () => {
-      // Mock readFileSync to throw an error
-      const readSpy = vi.spyOn(fs, 'readFileSync').mockImplementation(() => {
+      vi.mocked(fs.existsSync).mockReturnValueOnce(true);
+      const readSpy = vi.mocked(fs.readFileSync);
+      readSpy.mockImplementationOnce(() => {
         throw new Error('Read error');
       });
-      // but existsSync should be true to attempt a read
-      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
@@ -92,7 +100,6 @@ describe('InstallationManager', () => {
 
       expect(id).toBe('123456789');
       expect(consoleErrorSpy).toHaveBeenCalled();
-      readSpy.mockRestore();
     });
   });
 });
