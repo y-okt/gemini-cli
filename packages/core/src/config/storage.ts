@@ -18,9 +18,15 @@ export class Storage {
 
   constructor(targetDir: string) {
     this.targetDir = targetDir;
-    this.ensureGlobalGeminiDirExists();
-    this.ensureGlobalTempDirExists();
-    this.ensureProjectTempDirExists();
+    try {
+      this.ensureGlobalGeminiDirExists();
+      this.ensureGlobalTempDirExists();
+      this.ensureProjectTempDirExists();
+    } catch (error) {
+      throw new Error(
+        `Failed to create required Gemini directories. Please check permissions for your home and temp directories. Original error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   getGeminiDir(): string {
