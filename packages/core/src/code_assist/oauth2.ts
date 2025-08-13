@@ -24,21 +24,8 @@ import { AuthType } from '../core/contentGenerator.js';
 import readline from 'node:readline';
 import { Storage } from '../config/storage.js';
 
-let storageInstance: Storage | null = null;
-function getStorage(): Storage {
-  if (!storageInstance) {
-    storageInstance = new Storage(process.cwd());
-  }
-  return storageInstance;
-}
-
-let userAccountManagerInstance: UserAccountManager | null = null;
-function getUserAccountManager(): UserAccountManager {
-  if (!userAccountManagerInstance) {
-    userAccountManagerInstance = new UserAccountManager(getStorage());
-  }
-  return userAccountManagerInstance;
-}
+const storage = new Storage(process.cwd());
+const userAccountManager = new UserAccountManager(storage);
 
 //  OAuth Client ID used to initiate OAuth2Client class.
 const OAUTH_CLIENT_ID =
@@ -108,7 +95,7 @@ async function initOauthClient(
   if (await loadCachedCredentials(client)) {
     // Found valid cached credentials.
     // Check if we need to retrieve Google Account ID or Email
-    if (!getUserAccountManager().getCachedGoogleAccount()) {
+    if (!userAccountManager.getCachedGoogleAccount()) {
       try {
         await fetchAndCacheUserInfo(client);
       } catch {
@@ -362,8 +349,7 @@ export function getAvailablePort(): Promise<number> {
 async function loadCachedCredentials(client: OAuth2Client): Promise<boolean> {
   try {
     const keyFile =
-      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-      getStorage().getOAuthCredsPath();
+      process.env.GOOGLE_APPLICATION_CREDENTIALS || storage.getOAuthCredsPath();
 
     const creds = await fs.readFile(keyFile, 'utf-8');
     client.setCredentials(JSON.parse(creds));
@@ -392,14 +378,14 @@ async function cacheCredentials(credentials: Credentials) {
 }
 
 function getCachedCredentialPath(): string {
-  return getStorage().getOAuthCredsPath();
+  return storage.getOAuthCredsPath();
 }
 
 export async function clearCachedCredentialFile() {
   try {
-    await fs.rm(getStorage().getOAuthCredsPath(), { force: true });
+    await fs.rm(storage.getOAuthCredsPath(), { force: true });
     // Clear the Google Account ID cache when credentials are cleared
-    await getUserAccountManager().clearCachedGoogleAccount();
+    await userAccountManager.clearCachedGoogleAccount();
   } catch (_) {
     /* empty */
   }
@@ -431,7 +417,7 @@ async function fetchAndCacheUserInfo(client: OAuth2Client): Promise<void> {
     }
 
     const userInfo = await response.json();
-    await getUserAccountManager().cacheGoogleAccount(userInfo.email);
+    await userAccountManager.cacheGoogleAccount(userInfo.email);
   } catch (error) {
     console.error('Error retrieving user info:', error);
   }
