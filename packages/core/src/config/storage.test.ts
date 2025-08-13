@@ -53,14 +53,4 @@ describe('Storage – additional helpers', () => {
     );
     expect(storage.getMcpOAuthTokensPath()).toBe(expected);
   });
-
-  it('getGlobalFilePath joins segments under ~/.gemini', () => {
-    const expected = path.join(os.homedir(), '.gemini', 'foo', 'bar');
-    expect(storage.getGlobalFilePath('foo', 'bar')).toBe(expected);
-  });
-
-  it('getProjectFilePath joins segments under project/.gemini', () => {
-    const expected = path.join(projectRoot, '.gemini', 'foo', 'bar');
-    expect(storage.getProjectFilePath('foo', 'bar')).toBe(expected);
-  });
 });

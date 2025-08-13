@@ -791,7 +791,10 @@ export class ClearcutLogger {
  * Adds default fields to data, and returns a new data array.  This fields
  * should exist on all log events.
  */
-function addDefaultFields(data: EventValue[], totalAccounts: number): EventValue[] {
+function addDefaultFields(
+  data: EventValue[],
+  totalAccounts: number,
+): EventValue[] {
   const surface = determineSurface();
   const defaultLogMetadata: EventValue[] = [
     {

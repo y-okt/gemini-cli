@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MCPServerConfig, GeminiCLIExtension } from '@google/gemini-cli-core';
+import { MCPServerConfig, GeminiCLIExtension, Storage } from '@google/gemini-cli-core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { Storage } from '@google/gemini-cli-core';
 
+export const EXTENSIONS_CONFIG_FILENAME = 'gemini-extension.json';
 
 export interface Extension {
   path: string;
@@ -61,8 +61,7 @@ function loadExtensionsFromDir(dir: string): Extension[] {
   return extensions;
 }
 
-function loadExtension(storage: Storage): Extension | null {
-  const extensionDir = storage.getExtensionsDir();
+function loadExtension(extensionDir: string): Extension | null {
   if (!fs.statSync(extensionDir).isDirectory()) {
     console.error(
       `Warning: unexpected file ${extensionDir} in extensions directory.`,
@@ -70,7 +69,7 @@ function loadExtension(storage: Storage): Extension | null {
     return null;
   }
 
-  const configFilePath = storage.getExtensionsConfigPath();
+  const configFilePath = path.join(extensionDir, EXTENSIONS_CONFIG_FILENAME);
   if (!fs.existsSync(configFilePath)) {
     console.error(
       `Warning: extension directory ${extensionDir} does not contain a config file ${configFilePath}.`,

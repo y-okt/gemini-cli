@@ -7,6 +7,21 @@
 import * as os from 'os';
 vi.mock('os');
 
+// Prevent Storage from performing real mkdirSync on the host FS
+vi.mock('fs', () => {
+  const mkdirSync = vi.fn();
+  const existsSync = vi.fn(() => true);
+  const readFileSync = vi.fn();
+  const writeFileSync = vi.fn();
+  const fsMock = {
+    mkdirSync,
+    existsSync,
+    readFileSync,
+    writeFileSync,
+  } as unknown as typeof import('fs');
+  return { ...fsMock, default: fsMock } as unknown as Record<string, unknown>;
+});
+
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useShellHistory } from './useShellHistory.js';
 import * as fs from 'fs/promises';

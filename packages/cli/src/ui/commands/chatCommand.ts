@@ -30,9 +30,10 @@ const getSavedChatTags = async (
   mtSortDesc: boolean,
 ): Promise<ChatDetail[]> => {
   const cfg = context.services.config;
-  const geminiDir = cfg
-    ? new Storage(cfg.getProjectRoot()).getProjectTempDir()
-    : undefined;
+  const geminiDir =
+    cfg && cfg.getProjectRoot()
+      ? new Storage(cfg.getProjectRoot()).getProjectTempDir()
+      : undefined;
   if (!geminiDir) {
     return [];
   }

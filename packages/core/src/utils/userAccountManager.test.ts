@@ -24,7 +24,7 @@ describe('UserAccountManager', () => {
   let userAccountManager: UserAccountManager;
   let storage: Storage;
   const accountsFile = () =>
-    path.join(tempHomeDir, '.gemini', 'tmp', 'google_accounts.json');
+    path.join(tempHomeDir, '.gemini', 'google_accounts.json');
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(

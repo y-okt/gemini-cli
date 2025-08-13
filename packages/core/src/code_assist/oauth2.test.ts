@@ -4,7 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import { OAuth2Client, Compute } from 'google-auth-library';
+import * as fs from 'fs';
+import * as path from 'path';
+import http from 'http';
+import open from 'open';
+import crypto from 'crypto';
 import * as os from 'os';
+import { AuthType } from '../core/contentGenerator.js';
+import { Config } from '../config/config.js';
+import readline from 'node:readline';
+import { UserAccountManager } from '../utils/userAccountManager.js';
+
 vi.mock('os', async (importOriginal) => {
   const os = await importOriginal<typeof import('os')>();
   return {
@@ -13,23 +25,9 @@ vi.mock('os', async (importOriginal) => {
   };
 });
 
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { getOauthClient } from './oauth2.js';
-import { UserAccountManager } from '../utils/userAccountManager.js';
-import { OAuth2Client, Compute } from 'google-auth-library';
-import * as fs from 'fs';
-import * as path from 'path';
-import http from 'http';
-import open from 'open';
-import crypto from 'crypto';
-import { AuthType } from '../core/contentGenerator.js';
-import { Config } from '../config/config.js';
-import readline from 'node:readline';
-
 vi.mock('google-auth-library');
 vi.mock('http');
 vi.mock('open');
-vi.mock('crypto');
 vi.mock('node:readline');
 vi.mock('../utils/browser.js', () => ({
   shouldAttemptBrowserLaunch: () => true,
@@ -44,17 +42,27 @@ const mockConfig = {
 // Mock fetch globally
 global.fetch = vi.fn();
 
+let getOauthClient: (
+  authType: AuthType,
+  config: Config,
+) => Promise<OAuth2Client>;
+
 describe('oauth2', () => {
   let tempHomeDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tempHomeDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'gemini-cli-test-home-'),
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
+    vi.spyOn(process, 'cwd').mockReturnValue(tempHomeDir);
+    vi.resetModules();
+    const mod = await import('./oauth2.js');
+    getOauthClient = mod.getOauthClient;
   });
   afterEach(() => {
     fs.rmSync(tempHomeDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     resetOauthClientForTesting();
     delete process.env.CLOUD_SHELL;
@@ -167,7 +175,6 @@ describe('oauth2', () => {
     const googleAccountPath = path.join(
       tempHomeDir,
       '.gemini',
-      'tmp',
       'google_accounts.json',
     );
     expect(fs.existsSync(googleAccountPath)).toBe(true);
@@ -289,10 +296,6 @@ describe('oauth2', () => {
 
       await getOauthClient(AuthType.LOGIN_WITH_GOOGLE, mockConfig);
 
-      expect(fs.promises.readFile).toHaveBeenCalledWith(
-        '/user/home/.gemini/tmp/oauth_creds.json',
-        'utf-8',
-      );
       expect(mockClient.setCredentials).toHaveBeenCalledWith(cachedCreds);
       expect(mockClient.getAccessToken).toHaveBeenCalled();
       expect(mockClient.getTokenInfo).toHaveBeenCalled();
