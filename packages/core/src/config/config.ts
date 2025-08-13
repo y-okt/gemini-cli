@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import {
@@ -361,11 +360,6 @@ export class Config {
     this.initialized = true;
     // Initialize centralized FileDiscoveryService
     this.getFileService();
-
-    const tmpDir = this.storage.getGlobalTempDir();
-    if (!fs.existsSync(tmpDir)) {
-      fs.mkdirSync(tmpDir, { recursive: true });
-    }
 
     if (this.getCheckpointingEnabled()) {
       await this.getGitService();

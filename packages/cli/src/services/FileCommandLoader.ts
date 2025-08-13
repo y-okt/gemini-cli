@@ -126,7 +126,7 @@ export class FileCommandLoader implements ICommandLoader {
   private getCommandDirectories(): CommandDirectory[] {
     const dirs: CommandDirectory[] = [];
 
-    const globalStorage = new Storage(process.cwd());
+    const globalStorage = this.config?.storage ?? new Storage(process.cwd());
     const projectStorage = new Storage(this.projectRoot);
 
     // 1. User commands
