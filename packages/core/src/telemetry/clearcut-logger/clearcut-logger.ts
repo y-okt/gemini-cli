@@ -124,6 +124,11 @@ export class ClearcutLogger {
   private readonly config: Config;
   private readonly installationManager: InstallationManager;
   private readonly userAccountManager: UserAccountManager;
+
+  /**
+   * Queue of pending events that need to be flushed to the server.  New events
+   * are added to this queue and then flushed on demand (via `flushToClearcut`)
+   */
   private readonly events: FixedDeque<LogEventEntry[]>;
 
   /**

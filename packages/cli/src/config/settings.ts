@@ -20,7 +20,6 @@ import { Settings, MemoryImportFormat } from './settingsSchema.js';
 
 export type { Settings, MemoryImportFormat };
 
-// Directory and path helpers now resolved via Storage to avoid hard-coding
 const globalStorage = new Storage(process.cwd());
 
 export const SETTINGS_DIRECTORY_NAME = '.gemini'; // retained for text uses
