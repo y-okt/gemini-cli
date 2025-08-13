@@ -7,6 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { homedir, platform } from 'os';
+import { Storage } from '@google/gemini-cli-core';
 import * as dotenv from 'dotenv';
 import {
   GEMINI_CONFIG_DIR as GEMINI_DIR,
@@ -19,9 +20,13 @@ import { Settings, MemoryImportFormat } from './settingsSchema.js';
 
 export type { Settings, MemoryImportFormat };
 
-export const SETTINGS_DIRECTORY_NAME = '.gemini';
-export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
-export const USER_SETTINGS_PATH = path.join(USER_SETTINGS_DIR, 'settings.json');
+// Directory and path helpers now resolved via Storage to avoid hard-coding
+const globalStorage = new Storage(process.cwd());
+
+export const SETTINGS_DIRECTORY_NAME = '.gemini'; // retained for text uses
+
+export const USER_SETTINGS_PATH = globalStorage.getGlobalSettingsPath();
+export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
 export const DEFAULT_EXCLUDED_ENV_VARS = ['DEBUG', 'DEBUG_MODE'];
 
 export function getSystemSettingsPath(): string {
@@ -38,7 +43,7 @@ export function getSystemSettingsPath(): string {
 }
 
 export function getWorkspaceSettingsPath(workspaceDir: string): string {
-  return path.join(workspaceDir, SETTINGS_DIRECTORY_NAME, 'settings.json');
+  return new Storage(workspaceDir).getWorkspaceSettingsPath();
 }
 
 export type { DnsResolutionOrder } from './settingsSchema.js';

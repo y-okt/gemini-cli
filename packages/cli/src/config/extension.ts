@@ -8,9 +8,8 @@ import { MCPServerConfig, GeminiCLIExtension } from '@google/gemini-cli-core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { Storage } from '@google/gemini-cli-core';
 
-export const EXTENSIONS_DIRECTORY_NAME = path.join('.gemini', 'extensions');
-export const EXTENSIONS_CONFIG_FILENAME = 'gemini-extension.json';
 
 export interface Extension {
   path: string;
@@ -43,7 +42,9 @@ export function loadExtensions(workspaceDir: string): Extension[] {
 }
 
 function loadExtensionsFromDir(dir: string): Extension[] {
-  const extensionsDir = path.join(dir, EXTENSIONS_DIRECTORY_NAME);
+  // Use Storage to resolve the project/user .gemini directory instead of manual path construction.
+  const storage = new Storage(dir);
+  const extensionsDir = storage.getExtensionsDir();
   if (!fs.existsSync(extensionsDir)) {
     return [];
   }
@@ -60,7 +61,8 @@ function loadExtensionsFromDir(dir: string): Extension[] {
   return extensions;
 }
 
-function loadExtension(extensionDir: string): Extension | null {
+function loadExtension(storage: Storage): Extension | null {
+  const extensionDir = storage.getExtensionsDir();
   if (!fs.statSync(extensionDir).isDirectory()) {
     console.error(
       `Warning: unexpected file ${extensionDir} in extensions directory.`,
@@ -68,7 +70,7 @@ function loadExtension(extensionDir: string): Extension | null {
     return null;
   }
 
-  const configFilePath = path.join(extensionDir, EXTENSIONS_CONFIG_FILENAME);
+  const configFilePath = storage.getExtensionsConfigPath();
   if (!fs.existsSync(configFilePath)) {
     console.error(
       `Warning: extension directory ${extensionDir} does not contain a config file ${configFilePath}.`,
