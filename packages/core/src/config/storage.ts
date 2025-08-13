@@ -12,6 +12,7 @@ import * as fs from 'fs';
 export const GEMINI_DIR = '.gemini';
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 const TMP_DIR_NAME = 'tmp';
+const HISTORY_DIR_NAME = 'history';
 
 export class Storage {
   private readonly targetDir: string;
@@ -22,6 +23,7 @@ export class Storage {
       this.ensureGlobalGeminiDirExists();
       this.ensureGlobalTempDirExists();
       this.ensureProjectTempDirExists();
+      this.ensureGlobalHistoryDirExists();
     } catch (error) {
       throw new Error(
         `Failed to create required Gemini directories. Please check permissions for your home and temp directories. Original error: ${error instanceof Error ? error.message : String(error)}`,
@@ -45,6 +47,11 @@ export class Storage {
 
   private ensureGlobalGeminiDirExists(): void {
     fs.mkdirSync(this.getGlobalGeminiDir(), { recursive: true });
+  }
+
+  private ensureGlobalHistoryDirExists(): void {
+    const historyDir = path.join(this.getGlobalGeminiDir(), HISTORY_DIR_NAME);
+    fs.mkdirSync(historyDir, { recursive: true });
   }
 
   getGlobalTempDir(): string {
@@ -89,8 +96,7 @@ export class Storage {
 
   getHistoryDir(): string {
     const hash = this.getFilePathHash(this.getProjectRoot());
-    const historyDir = path.join(this.getGlobalGeminiDir(), 'history');
-    fs.mkdirSync(historyDir, { recursive: true }); // Ensure it exists
+    const historyDir = path.join(this.getGlobalGeminiDir(), HISTORY_DIR_NAME);
     return path.join(historyDir, hash);
   }
 

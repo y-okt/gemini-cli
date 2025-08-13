@@ -26,7 +26,6 @@ import {
   UserPromptEvent,
   DEFAULT_GEMINI_FLASH_MODEL,
   parseAndFormatApiError,
-  Storage,
 } from '@google/gemini-cli-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import {
@@ -114,12 +113,7 @@ export const useGeminiStream = (
     return new GitService(config.getProjectRoot());
   }, [config]);
 
-  const storage = useMemo(() => {
-    if (!config.getProjectRoot()) {
-      return;
-    }
-    return new Storage(config.getProjectRoot());
-  }, [config]);
+  const storage = config.storage;
 
   const [toolCalls, scheduleToolCalls, markToolsAsSubmitted] =
     useReactToolScheduler(
@@ -885,9 +879,7 @@ export const useGeminiStream = (
       );
 
       if (restorableToolCalls.length > 0) {
-        const checkpointDir = storage?.getProjectTempDir()
-          ? path.join(storage.getProjectTempDir(), 'checkpoints')
-          : undefined;
+        const checkpointDir = storage.getProjectTempCheckpointsDir();
 
         if (!checkpointDir) {
           return;
