@@ -23,8 +23,7 @@ describe('UserAccountManager', () => {
   let tempHomeDir: string;
   let userAccountManager: UserAccountManager;
   let storage: Storage;
-  const accountsFile = () =>
-    path.join(tempHomeDir, '.gemini', 'google_accounts.json');
+  let accountsFile: () => string;
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
@@ -32,6 +31,8 @@ describe('UserAccountManager', () => {
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
     storage = new Storage(tempHomeDir);
+    accountsFile = () =>
+      path.join(tempHomeDir, '.gemini', 'google_accounts.json');
     userAccountManager = new UserAccountManager(storage);
   });
 

@@ -4,32 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as os from 'os';
-vi.mock('os');
-
-// Prevent Storage from performing real mkdirSync on the host FS
-vi.mock('fs', () => {
-  const mkdirSync = vi.fn();
-  const existsSync = vi.fn(() => true);
-  const readFileSync = vi.fn();
-  const writeFileSync = vi.fn();
-  const fsMock = {
-    mkdirSync,
-    existsSync,
-    readFileSync,
-    writeFileSync,
-  } as unknown as typeof import('fs');
-  return { ...fsMock, default: fsMock } as unknown as Record<string, unknown>;
-});
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useShellHistory } from './useShellHistory.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as os from 'os';
 import * as crypto from 'crypto';
 
 vi.mock('fs/promises');
+vi.mock('os');
 vi.mock('crypto');
+vi.mock('fs', async (importOriginal) => {
+  const actualFs = await importOriginal<typeof import('fs')>();
+  return {
+    ...actualFs,
+    mkdirSync: vi.fn(),
+  };
+});
 
 const MOCKED_PROJECT_ROOT = '/test/project';
 const MOCKED_HOME_DIR = '/test/home';
