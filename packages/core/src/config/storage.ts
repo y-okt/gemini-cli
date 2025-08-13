@@ -12,7 +12,6 @@ import * as fs from 'fs';
 export const GEMINI_DIR = '.gemini';
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 const TMP_DIR_NAME = 'tmp';
-const HISTORY_DIR_NAME = 'history';
 
 export class Storage {
   private readonly targetDir: string;
@@ -50,7 +49,7 @@ export class Storage {
   }
 
   private ensureGlobalHistoryDirExists(): void {
-    const historyDir = path.join(this.getGlobalGeminiDir(), HISTORY_DIR_NAME);
+    const historyDir = path.join(this.getGlobalGeminiDir(), 'history');
     fs.mkdirSync(historyDir, { recursive: true });
   }
 
@@ -96,7 +95,7 @@ export class Storage {
 
   getHistoryDir(): string {
     const hash = this.getFilePathHash(this.getProjectRoot());
-    const historyDir = path.join(this.getGlobalGeminiDir(), HISTORY_DIR_NAME);
+    const historyDir = path.join(this.getGlobalGeminiDir(), 'history');
     return path.join(historyDir, hash);
   }
 
@@ -130,5 +129,9 @@ export class Storage {
 
   getExtensionsConfigPath(): string {
     return path.join(this.getExtensionsDir(), 'gemini-extension.json');
+  }
+
+  getGlobalMemoryFilePath(): string {
+    return path.join(this.getGlobalGeminiDir(), 'memory.md');
   }
 }
