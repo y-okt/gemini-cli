@@ -6,11 +6,11 @@
 
 import path from 'node:path';
 import os from 'os';
+import { Storage } from '../config/storage.js';
 import * as crypto from 'crypto';
 
 export const GEMINI_DIR = '.gemini';
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
-const TMP_DIR_NAME = 'tmp';
 
 /**
  * Special characters that need to be escaped in file paths for shell compatibility.
@@ -179,8 +179,8 @@ export function getProjectHash(projectRoot: string): string {
  * @returns The path to the project's temporary directory.
  */
 export function getProjectTempDir(projectRoot: string): string {
-  const hash = getProjectHash(projectRoot);
-  return path.join(os.homedir(), GEMINI_DIR, TMP_DIR_NAME, hash);
+  const storage = new Storage(projectRoot);
+  return storage.getProjectTempDir();
 }
 
 /**
