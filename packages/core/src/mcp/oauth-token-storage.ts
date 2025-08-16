@@ -42,8 +42,7 @@ export class MCPOAuthTokenStorage {
    * @returns The full path to the token storage file
    */
   private static getTokenFilePath(): string {
-    const storage = new Storage(process.cwd());
-    return storage.getMcpOAuthTokensPath();
+    return Storage.getMcpOAuthTokensPath();
   }
 
   /**

@@ -15,14 +15,8 @@ interface UserAccounts {
 }
 
 export class UserAccountManager {
-  private readonly storage: Storage;
-
-  constructor(storage: Storage) {
-    this.storage = storage;
-  }
-
   private getGoogleAccountsCachePath(): string {
-    return this.storage.getGoogleAccountsPath();
+    return Storage.getGoogleAccountsPath();
   }
 
   /**

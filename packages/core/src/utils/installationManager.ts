@@ -6,17 +6,12 @@
 
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
+import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
 
 export class InstallationManager {
-  private readonly storage: Storage;
-
-  constructor(storage: Storage) {
-    this.storage = storage;
-  }
-
   private getInstallationIdPath(): string {
-    return this.storage.getInstallationIdPath();
+    return Storage.getInstallationIdPath();
   }
 
   private readInstallationIdFromFile(): string | null {
@@ -32,6 +27,8 @@ export class InstallationManager {
 
   private writeInstallationIdToFile(installationId: string) {
     const installationIdFile = this.getInstallationIdPath();
+    const dir = path.dirname(installationIdFile);
+    fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(installationIdFile, installationId, 'utf-8');
   }
 

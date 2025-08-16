@@ -24,8 +24,7 @@ import { AuthType } from '../core/contentGenerator.js';
 import readline from 'node:readline';
 import { Storage } from '../config/storage.js';
 
-const storage = new Storage(process.cwd());
-const userAccountManager = new UserAccountManager(storage);
+const userAccountManager = new UserAccountManager();
 
 //  OAuth Client ID used to initiate OAuth2Client class.
 const OAUTH_CLIENT_ID =
@@ -348,7 +347,7 @@ export function getAvailablePort(): Promise<number> {
 
 async function loadCachedCredentials(client: OAuth2Client): Promise<boolean> {
   const pathsToTry = [
-    getCachedCredentialPath(),
+    Storage.getOAuthCredsPath(),
     process.env['GOOGLE_APPLICATION_CREDENTIALS'],
   ].filter((p): p is string => !!p);
 
@@ -376,15 +375,11 @@ async function loadCachedCredentials(client: OAuth2Client): Promise<boolean> {
 }
 
 async function cacheCredentials(credentials: Credentials) {
-  const filePath = getCachedCredentialPath();
+  const filePath = Storage.getOAuthCredsPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
 
   const credString = JSON.stringify(credentials, null, 2);
   await fs.writeFile(filePath, credString, { mode: 0o600 });
-}
-
-function getCachedCredentialPath(): string {
-  return storage.getOAuthCredsPath();
 }
 
 export function clearOauthClientCache() {
@@ -393,7 +388,7 @@ export function clearOauthClientCache() {
 
 export async function clearCachedCredentialFile() {
   try {
-    await fs.rm(storage.getOAuthCredsPath(), { force: true });
+    await fs.rm(Storage.getOAuthCredsPath(), { force: true });
     // Clear the Google Account ID cache when credentials are cleared
     await userAccountManager.clearCachedGoogleAccount();
     // Clear the in-memory OAuth client cache to force re-authentication
