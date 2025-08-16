@@ -5,6 +5,7 @@
  */
 
 import { promises as fsp, existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { Storage } from '../config/storage.js';
 
 interface UserAccounts {
@@ -31,18 +32,13 @@ async function readAccounts(filePath: string): Promise<UserAccounts> {
 }
 
 export class UserAccountManager {
-  private readonly storage: Storage;
-
-  constructor(storage: Storage) {
-    this.storage = storage;
-  }
-
   private getGoogleAccountsCachePath(): string {
-    return this.storage.getGoogleAccountsPath();
+    return Storage.getGoogleAccountsPath();
   }
 
   async cacheGoogleAccount(email: string): Promise<void> {
     const filePath = this.getGoogleAccountsCachePath();
+    await fsp.mkdir(path.dirname(filePath), { recursive: true });
 
     const accounts = await readAccounts(filePath);
 

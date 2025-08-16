@@ -24,8 +24,7 @@ import { AuthType } from '../core/contentGenerator.js';
 import readline from 'node:readline';
 import { Storage } from '../config/storage.js';
 
-const storage = new Storage(process.cwd());
-const userAccountManager = new UserAccountManager(storage);
+const userAccountManager = new UserAccountManager();
 
 //  OAuth Client ID used to initiate OAuth2Client class.
 const OAUTH_CLIENT_ID =
@@ -349,7 +348,7 @@ export function getAvailablePort(): Promise<number> {
 async function loadCachedCredentials(client: OAuth2Client): Promise<boolean> {
   try {
     const keyFile =
-      process.env.GOOGLE_APPLICATION_CREDENTIALS || storage.getOAuthCredsPath();
+      process.env.GOOGLE_APPLICATION_CREDENTIALS || Storage.getOAuthCredsPath();
 
     const creds = await fs.readFile(keyFile, 'utf-8');
     client.setCredentials(JSON.parse(creds));
@@ -378,12 +377,12 @@ async function cacheCredentials(credentials: Credentials) {
 }
 
 function getCachedCredentialPath(): string {
-  return storage.getOAuthCredsPath();
+  return Storage.getOAuthCredsPath();
 }
 
 export async function clearCachedCredentialFile() {
   try {
-    await fs.rm(storage.getOAuthCredsPath(), { force: true });
+    await fs.rm(Storage.getOAuthCredsPath(), { force: true });
     // Clear the Google Account ID cache when credentials are cleared
     await userAccountManager.clearCachedGoogleAccount();
   } catch (_) {

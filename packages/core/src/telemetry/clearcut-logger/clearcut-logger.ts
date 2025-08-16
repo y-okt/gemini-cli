@@ -150,8 +150,8 @@ export class ClearcutLogger {
   private constructor(config: Config) {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
-    this.installationManager = new InstallationManager(config.storage);
-    this.userAccountManager = new UserAccountManager(config.storage);
+    this.installationManager = new InstallationManager();
+    this.userAccountManager = new UserAccountManager();
   }
 
   static getInstance(config?: Config): ClearcutLogger | undefined {

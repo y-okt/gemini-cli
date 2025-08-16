@@ -6,7 +6,6 @@
 
 import path from 'node:path';
 import os from 'os';
-import { Storage } from '../config/storage.js';
 import * as crypto from 'crypto';
 
 export const GEMINI_DIR = '.gemini';
@@ -178,10 +177,6 @@ export function getProjectHash(projectRoot: string): string {
  * @param projectRoot The absolute path to the project's root directory.
  * @returns The path to the project's temporary directory.
  */
-export function getProjectTempDir(projectRoot: string): string {
-  const storage = new Storage(projectRoot);
-  return storage.getProjectTempDir();
-}
 
 /**
  * Returns the absolute path to the user-level commands directory.

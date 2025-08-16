@@ -6,7 +6,6 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { UserAccountManager } from './userAccountManager.js';
-import { Storage } from '../config/storage.js';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
@@ -22,7 +21,6 @@ vi.mock('os', async (importOriginal) => {
 describe('UserAccountManager', () => {
   let tempHomeDir: string;
   let userAccountManager: UserAccountManager;
-  let storage: Storage;
   let accountsFile: () => string;
 
   beforeEach(() => {
@@ -30,10 +28,9 @@ describe('UserAccountManager', () => {
       path.join(os.tmpdir(), 'gemini-cli-test-home-'),
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
-    storage = new Storage(tempHomeDir);
     accountsFile = () =>
       path.join(tempHomeDir, '.gemini', 'google_accounts.json');
-    userAccountManager = new UserAccountManager(storage);
+    userAccountManager = new UserAccountManager();
   });
 
   afterEach(() => {

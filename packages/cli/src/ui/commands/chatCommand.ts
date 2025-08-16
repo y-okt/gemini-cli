@@ -8,7 +8,6 @@ import * as fsPromises from 'fs/promises';
 import React from 'react';
 import { Text } from 'ink';
 import { Colors } from '../colors.js';
-import { Storage } from '@google/gemini-cli-core';
 import {
   CommandContext,
   SlashCommand,
@@ -16,7 +15,7 @@ import {
   CommandKind,
   SlashCommandActionReturn,
 } from './types.js';
-import { decodeTagName } from '@google/gemini-cli-core';
+import { Storage, decodeTagName } from '@google/gemini-cli-core';
 import path from 'path';
 import { HistoryItemWithoutId, MessageType } from '../types.js';
 
@@ -31,9 +30,10 @@ const getSavedChatTags = async (
 ): Promise<ChatDetail[]> => {
   const cfg = context.services.config;
   const geminiDir =
-    cfg && cfg.getProjectRoot()
+    cfg?.storage?.getProjectTempDir() ??
+    (cfg?.getProjectRoot()
       ? new Storage(cfg.getProjectRoot()).getProjectTempDir()
-      : undefined;
+      : undefined);
   if (!geminiDir) {
     return [];
   }

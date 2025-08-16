@@ -18,63 +18,60 @@ export class Storage {
 
   constructor(targetDir: string) {
     this.targetDir = targetDir;
-    try {
-      this.ensureGlobalGeminiDirExists();
-      this.ensureGlobalTempDirExists();
-      this.ensureProjectTempDirExists();
-      this.ensureGlobalHistoryDirExists();
-    } catch (error) {
-      throw new Error(
-        `Failed to create required Gemini directories. Please check permissions for your home and temp directories. Original error: ${error instanceof Error ? error.message : String(error)}`,
-      );
+  }
+
+  static getGlobalGeminiDir(): string {
+    const homeDir = os.homedir();
+    if (!homeDir) {
+      return path.join(os.tmpdir(), '.gemini');
     }
+    return path.join(homeDir, GEMINI_DIR);
+  }
+
+  static getMcpOAuthTokensPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');
+  }
+
+  static getGlobalSettingsPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'settings.json');
+  }
+
+  static getInstallationIdPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'installation_id');
+  }
+
+  static getGoogleAccountsPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
+  }
+
+  static getUserCommandsDir(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'commands');
+  }
+
+  static getGlobalMemoryFilePath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'memory.md');
+  }
+
+  static getGlobalTempDir(): string {
+    return path.join(Storage.getGlobalGeminiDir(), TMP_DIR_NAME);
   }
 
   getGeminiDir(): string {
     return path.join(this.targetDir, GEMINI_DIR);
   }
 
-  getGlobalGeminiDir(): string {
-    const homeDir = os.homedir();
-    if (!homeDir) {
-      // This is a fallback for testing environments where homedir is not defined.
-      return path.join(os.tmpdir(), '.gemini');
-    }
-    const geminiDir = path.join(homeDir, GEMINI_DIR);
-    return geminiDir;
-  }
-
-  private ensureGlobalGeminiDirExists(): void {
-    fs.mkdirSync(this.getGlobalGeminiDir(), { recursive: true });
-  }
-
-  private ensureGlobalHistoryDirExists(): void {
-    const historyDir = path.join(this.getGlobalGeminiDir(), 'history');
-    fs.mkdirSync(historyDir, { recursive: true });
-  }
-
-  getGlobalTempDir(): string {
-    const globalGeminiDir = this.getGlobalGeminiDir();
-    const tempDir = path.join(globalGeminiDir, TMP_DIR_NAME);
-    return tempDir;
-  }
-
-  private ensureGlobalTempDirExists(): void {
-    fs.mkdirSync(this.getGlobalTempDir(), { recursive: true });
-  }
-
   getProjectTempDir(): string {
     const hash = this.getFilePathHash(this.getProjectRoot());
-    const tempDir = this.getGlobalTempDir();
+    const tempDir = Storage.getGlobalTempDir();
     return path.join(tempDir, hash);
   }
 
-  private ensureProjectTempDirExists(): void {
+  ensureProjectTempDirExists(): void {
     fs.mkdirSync(this.getProjectTempDir(), { recursive: true });
   }
 
-  getOAuthCredsPath(): string {
-    return path.join(this.getGlobalGeminiDir(), 'oauth_creds.json');
+  static getOAuthCredsPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'oauth_creds.json');
   }
 
   getProjectRoot(): string {
@@ -85,38 +82,18 @@ export class Storage {
     return crypto.createHash('sha256').update(filePath).digest('hex');
   }
 
-  getInstallationIdPath(): string {
-    return path.join(this.getGlobalGeminiDir(), 'installation_id');
-  }
-
-  getGoogleAccountsPath(): string {
-    return path.join(this.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
-  }
-
   getHistoryDir(): string {
     const hash = this.getFilePathHash(this.getProjectRoot());
-    const historyDir = path.join(this.getGlobalGeminiDir(), 'history');
+    const historyDir = path.join(Storage.getGlobalGeminiDir(), 'history');
     return path.join(historyDir, hash);
-  }
-
-  getGlobalSettingsPath(): string {
-    return path.join(this.getGlobalGeminiDir(), 'settings.json');
   }
 
   getWorkspaceSettingsPath(): string {
     return path.join(this.getGeminiDir(), 'settings.json');
   }
 
-  getUserCommandsDir(): string {
-    return path.join(this.getGlobalGeminiDir(), 'commands');
-  }
-
   getProjectCommandsDir(): string {
     return path.join(this.getGeminiDir(), 'commands');
-  }
-
-  getMcpOAuthTokensPath(): string {
-    return path.join(this.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');
   }
 
   getProjectTempCheckpointsDir(): string {
@@ -129,9 +106,5 @@ export class Storage {
 
   getExtensionsConfigPath(): string {
     return path.join(this.getExtensionsDir(), 'gemini-extension.json');
-  }
-
-  getGlobalMemoryFilePath(): string {
-    return path.join(this.getGlobalGeminiDir(), 'memory.md');
   }
 }

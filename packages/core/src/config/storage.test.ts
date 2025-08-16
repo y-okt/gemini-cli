@@ -20,9 +20,8 @@ import { Storage } from './storage.js';
 
 describe('Storage – getGlobalSettingsPath', () => {
   it('returns path to ~/.gemini/settings.json', () => {
-    const storage = new Storage('/tmp/project');
     const expected = path.join(os.homedir(), '.gemini', 'settings.json');
-    expect(storage.getGlobalSettingsPath()).toBe(expected);
+    expect(Storage.getGlobalSettingsPath()).toBe(expected);
   });
 });
 
@@ -37,7 +36,7 @@ describe('Storage – additional helpers', () => {
 
   it('getUserCommandsDir returns ~/.gemini/commands', () => {
     const expected = path.join(os.homedir(), '.gemini', 'commands');
-    expect(storage.getUserCommandsDir()).toBe(expected);
+    expect(Storage.getUserCommandsDir()).toBe(expected);
   });
 
   it('getProjectCommandsDir returns project/.gemini/commands', () => {
@@ -51,6 +50,6 @@ describe('Storage – additional helpers', () => {
       '.gemini',
       'mcp-oauth-tokens.json',
     );
-    expect(storage.getMcpOAuthTokensPath()).toBe(expected);
+    expect(Storage.getMcpOAuthTokensPath()).toBe(expected);
   });
 });
