@@ -15,7 +15,7 @@ import {
   CommandKind,
   SlashCommandActionReturn,
 } from './types.js';
-import { Storage, decodeTagName } from '@google/gemini-cli-core';
+import { decodeTagName } from '@google/gemini-cli-core';
 import path from 'path';
 import { HistoryItemWithoutId, MessageType } from '../types.js';
 
@@ -29,11 +29,7 @@ const getSavedChatTags = async (
   mtSortDesc: boolean,
 ): Promise<ChatDetail[]> => {
   const cfg = context.services.config;
-  const geminiDir =
-    cfg?.storage?.getProjectTempDir() ??
-    (cfg?.getProjectRoot()
-      ? new Storage(cfg.getProjectRoot()).getProjectTempDir()
-      : undefined);
+  const geminiDir = cfg?.storage?.getProjectTempDir();
   if (!geminiDir) {
     return [];
   }

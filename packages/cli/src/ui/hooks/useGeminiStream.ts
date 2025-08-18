@@ -110,7 +110,7 @@ export const useGeminiStream = (
     if (!config.getProjectRoot()) {
       return;
     }
-    return new GitService(config.getProjectRoot());
+    return new GitService(config.getProjectRoot(), config.storage);
   }, [config]);
 
   const storage = config.storage;

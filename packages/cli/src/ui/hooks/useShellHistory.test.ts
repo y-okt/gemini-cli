@@ -30,6 +30,9 @@ vi.mock('@google/gemini-cli-core', () => {
     getProjectTempDir(): string {
       return '/test/home/.gemini/tmp/mocked_hash';
     }
+    getHistoryFilePath(): string {
+      return '/test/home/.gemini/tmp/mocked_hash/shell_history';
+    }
   }
   return {
     isNodeError: (err: unknown): err is NodeJS.ErrnoException =>

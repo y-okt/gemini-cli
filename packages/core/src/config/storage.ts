@@ -107,4 +107,8 @@ export class Storage {
   getExtensionsConfigPath(): string {
     return path.join(this.getExtensionsDir(), 'gemini-extension.json');
   }
+
+  getHistoryFilePath(): string {
+    return path.join(this.getProjectTempDir(), 'shell_history');
+  }
 }

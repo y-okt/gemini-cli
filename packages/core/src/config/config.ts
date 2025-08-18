@@ -735,7 +735,7 @@ export class Config {
 
   async getGitService(): Promise<GitService> {
     if (!this.gitService) {
-      this.gitService = new GitService(this.targetDir);
+      this.gitService = new GitService(this.targetDir, this.storage);
       await this.gitService.initialize();
     }
     return this.gitService;

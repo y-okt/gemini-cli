@@ -15,9 +15,9 @@ export class GitService {
   private projectRoot: string;
   private storage: Storage;
 
-  constructor(projectRoot: string) {
+  constructor(projectRoot: string, storage: Storage) {
     this.projectRoot = path.resolve(projectRoot);
-    this.storage = new Storage(this.projectRoot);
+    this.storage = storage;
   }
 
   private getHistoryDir(): string {

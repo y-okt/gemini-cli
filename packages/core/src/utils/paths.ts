@@ -173,29 +173,6 @@ export function getProjectHash(projectRoot: string): string {
 }
 
 /**
- * Generates a unique temporary directory path for a project.
- * @param projectRoot The absolute path to the project's root directory.
- * @returns The path to the project's temporary directory.
- */
-
-/**
- * Returns the absolute path to the user-level commands directory.
- * @returns The path to the user's commands directory.
- */
-export function getUserCommandsDir(): string {
-  return path.join(os.homedir(), GEMINI_DIR, COMMANDS_DIR_NAME);
-}
-
-/**
- * Returns the absolute path to the project-level commands directory.
- * @param projectRoot The absolute path to the project's root directory.
- * @returns The path to the project's commands directory.
- */
-export function getProjectCommandsDir(projectRoot: string): string {
-  return path.join(projectRoot, GEMINI_DIR, COMMANDS_DIR_NAME);
-}
-
-/**
  * Checks if a path is a subpath of another path.
  * @param parentPath The parent path.
  * @param childPath The child path.

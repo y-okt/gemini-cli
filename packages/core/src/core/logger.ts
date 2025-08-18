@@ -60,7 +60,6 @@ export function decodeTagName(str: string): string {
 }
 
 export class Logger {
-  private storage: Storage;
   private geminiDir: string | undefined;
   private logFilePath: string | undefined;
   private sessionId: string | undefined;
@@ -68,9 +67,11 @@ export class Logger {
   private initialized = false;
   private logs: LogEntry[] = []; // In-memory cache, ideally reflects the last known state of the file
 
-  constructor(sessionId: string) {
+  constructor(
+    sessionId: string,
+    private readonly storage: Storage,
+  ) {
     this.sessionId = sessionId;
-    this.storage = new Storage(process.cwd());
   }
 
   private async _readLogFile(): Promise<LogEntry[]> {
