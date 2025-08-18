@@ -20,7 +20,7 @@ import { Settings, MemoryImportFormat } from './settingsSchema.js';
 
 export type { Settings, MemoryImportFormat };
 
-export const SETTINGS_DIRECTORY_NAME = '.gemini'; // retained for text uses
+export const SETTINGS_DIRECTORY_NAME = '.gemini';
 
 export const USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
 export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
@@ -38,8 +38,6 @@ export function getSystemSettingsPath(): string {
     return '/etc/gemini-cli/settings.json';
   }
 }
-
-// Caller should use storage directly for workspace path
 
 export type { DnsResolutionOrder } from './settingsSchema.js';
 

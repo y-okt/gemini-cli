@@ -360,7 +360,6 @@ export class Config {
     this.initialized = true;
     // Initialize centralized FileDiscoveryService
     this.getFileService();
-
     if (this.getCheckpointingEnabled()) {
       await this.getGitService();
     }
