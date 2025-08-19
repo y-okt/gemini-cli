@@ -91,6 +91,7 @@ import { useKeypress, Key } from './hooks/useKeypress.js';
 import { KeypressProvider } from './contexts/KeypressContext.js';
 import { useKittyKeyboardProtocol } from './hooks/useKittyKeyboardProtocol.js';
 import { keyMatchers, Command } from './keyMatchers.js';
+import { MarkdownRenderMode } from './types.js';
 import * as fs from 'fs';
 import { UpdateNotification } from './components/UpdateNotification.js';
 import {
@@ -149,7 +150,7 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
   const [updateInfo, setUpdateInfo] = useState<UpdateObject | null>(null);
   const { stdout } = useStdout();
   const nightly = version.includes('nightly');
-  const { history, addItem, clearItems, loadHistory } = useHistory();
+  const { history, addItem, clearItems, loadHistory, updateItem } = useHistory();
   const settingsContext = useContext(SettingsContext);
   if (!settingsContext) {
     // This should not happen as App is always rendered within the provider.
@@ -694,7 +695,25 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
 
       if (keyMatchers[Command.SHOW_ERROR_DETAILS](key)) {
         setShowErrorDetails((prev) => !prev);
-      } else if (keyMatchers[Command.TOGGLE_TOOL_DESCRIPTIONS](key)) {
+      } else if (
+        keyMatchers[Command.TOGGLE_MARKDOWN_MODE]?.(key)
+      ) {
+        // Toggle render mode of last markdown-capable message
+        const lastIndex = [...history]
+          .reverse()
+          .find((item) => item.text && (item.type === 'gemini' || item.type === 'gemini_content'))?.id;
+
+        if (lastIndex !== undefined) {
+          updateItem(lastIndex, (prev) => ({
+            renderMode:
+              prev.renderMode === MarkdownRenderMode.Raw
+                ? MarkdownRenderMode.Rendered
+                : MarkdownRenderMode.Raw,
+          }));
+        }
+      } else if (
+        keyMatchers[Command.TOGGLE_TOOL_DESCRIPTIONS](key)
+      ) {
         const newValue = !showToolDescriptions;
         setShowToolDescriptions(newValue);
 
@@ -749,6 +768,7 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
       handleSlashCommand,
       isAuthenticating,
       cancelOngoingRequest,
+      updateItem,
     ],
   );
 

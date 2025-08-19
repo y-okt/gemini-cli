@@ -5,14 +5,18 @@
  */
 
 import React from 'react';
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import { MarkdownRenderMode } from '../../types.js';
+import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
+import { formatMarkdown } from '../../utils/formatMarkdown.js';
 
 interface GeminiMessageContentProps {
   text: string;
   isPending: boolean;
   availableTerminalHeight?: number;
   terminalWidth: number;
+  renderMode?: MarkdownRenderMode;
 }
 
 /*
@@ -26,18 +30,23 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
+  renderMode = MarkdownRenderMode.Rendered,
 }) => {
   const originalPrefix = '✦ ';
   const prefixWidth = originalPrefix.length;
 
   return (
     <Box flexDirection="column" paddingLeft={prefixWidth}>
-      <MarkdownDisplay
-        text={text}
-        isPending={isPending}
-        availableTerminalHeight={availableTerminalHeight}
-        terminalWidth={terminalWidth}
-      />
+      {renderMode === MarkdownRenderMode.Rendered ? (
+        <MarkdownDisplay
+          text={text}
+          isPending={isPending}
+          availableTerminalHeight={availableTerminalHeight}
+          terminalWidth={terminalWidth}
+        />
+      ) : (
+        <Text wrap="wrap">{formatMarkdown(text, renderMode)}</Text>
+      )}
     </Box>
   );
 };

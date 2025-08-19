@@ -7,13 +7,17 @@
 import React from 'react';
 import { Text, Box } from 'ink';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import { MarkdownRenderMode } from '../../types.js';
 import { Colors } from '../../colors.js';
+import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
+import { formatMarkdown } from '../../utils/formatMarkdown.js';
 
 interface GeminiMessageProps {
   text: string;
   isPending: boolean;
   availableTerminalHeight?: number;
   terminalWidth: number;
+  renderMode?: MarkdownRenderMode;
 }
 
 export const GeminiMessage: React.FC<GeminiMessageProps> = ({
@@ -21,6 +25,7 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
+  renderMode = MarkdownRenderMode.Rendered,
 }) => {
   const prefix = '✦ ';
   const prefixWidth = prefix.length;
@@ -31,12 +36,16 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
         <Text color={Colors.AccentPurple}>{prefix}</Text>
       </Box>
       <Box flexGrow={1} flexDirection="column">
-        <MarkdownDisplay
-          text={text}
-          isPending={isPending}
-          availableTerminalHeight={availableTerminalHeight}
-          terminalWidth={terminalWidth}
-        />
+        {renderMode === MarkdownRenderMode.Rendered ? (
+          <MarkdownDisplay
+            text={text}
+            isPending={isPending}
+            availableTerminalHeight={availableTerminalHeight}
+            terminalWidth={terminalWidth}
+          />
+        ) : (
+          <Text wrap="wrap">{formatMarkdown(text, renderMode)}</Text>
+        )}
       </Box>
     </Box>
   );

@@ -58,8 +58,15 @@ export interface CompressionProps {
   newTokenCount: number | null;
 }
 
+export enum MarkdownRenderMode {
+  Rendered = 'rendered',
+  Raw = 'raw',
+}
+
 export interface HistoryItemBase {
   text?: string; // Text content for user/gemini/info/error messages
+  /** Optional per-message markdown render mode. Defaults to Rendered. */
+  renderMode?: MarkdownRenderMode;
 }
 
 export type HistoryItemUser = HistoryItemBase & {

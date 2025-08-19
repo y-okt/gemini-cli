@@ -53,6 +53,7 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
         isPending={isPending}
         availableTerminalHeight={availableTerminalHeight}
         terminalWidth={terminalWidth}
+        renderMode={item.renderMode}
       />
     )}
     {item.type === 'gemini_content' && (
@@ -61,6 +62,7 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
         isPending={isPending}
         availableTerminalHeight={availableTerminalHeight}
         terminalWidth={terminalWidth}
+        renderMode={item.renderMode}
       />
     )}
     {item.type === 'info' && <InfoMessage text={item.text} />}
