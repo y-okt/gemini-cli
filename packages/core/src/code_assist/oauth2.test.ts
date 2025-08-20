@@ -180,7 +180,7 @@ describe('oauth2', () => {
     });
 
     // Verify the getCachedGoogleAccount function works
-    const userAccountManager = new UserAccountManager(new Storage(tempHomeDir));
+    const userAccountManager = new UserAccountManager();
     expect(userAccountManager.getCachedGoogleAccount()).toBe(
       'test-google-account@gmail.com',
     );
@@ -536,11 +536,13 @@ describe('oauth2', () => {
         googleAccountPath,
         JSON.stringify(accountData),
       );
-      const userAccountManager = new UserAccountManager(new Storage(tempHomeDir));
+      const userAccountManager = new UserAccountManager();
 
       expect(fs.existsSync(credsPath)).toBe(true);
       expect(fs.existsSync(googleAccountPath)).toBe(true);
-      expect(userAccountManager.getCachedGoogleAccount()).toBe('test@example.com');
+      expect(userAccountManager.getCachedGoogleAccount()).toBe(
+        'test@example.com',
+      );
 
       await clearCachedCredentialFile();
       expect(fs.existsSync(credsPath)).toBe(false);

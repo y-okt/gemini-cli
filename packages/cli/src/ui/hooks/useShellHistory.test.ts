@@ -28,10 +28,10 @@ vi.mock('fs', async (importOriginal) => {
 vi.mock('@google/gemini-cli-core', () => {
   class Storage {
     getProjectTempDir(): string {
-      return '/test/home/.gemini/tmp/mocked_hash';
+      return path.join('/test/home/', '.gemini', 'tmp', 'mocked_hash');
     }
     getHistoryFilePath(): string {
-      return '/test/home/.gemini/tmp/mocked_hash/shell_history';
+      return path.join('/test/home/', '.gemini', 'tmp', 'mocked_hash', 'shell_history');
     }
   }
   return {

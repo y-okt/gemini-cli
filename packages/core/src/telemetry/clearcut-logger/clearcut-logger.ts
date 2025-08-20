@@ -155,8 +155,8 @@ export class ClearcutLogger {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
     this.promptId = config?.getSessionId() ?? '';
-    this.installationManager = new InstallationManager(config.storage);
-    this.userAccountManager = new UserAccountManager(config.storage);
+    this.installationManager = new InstallationManager();
+    this.userAccountManager = new UserAccountManager();
   }
 
   static getInstance(config?: Config): ClearcutLogger | undefined {
@@ -210,7 +210,7 @@ export class ClearcutLogger {
     }
     const totalAccounts = this.userAccountManager.getLifetimeGoogleAccounts();
 
-    data = addDefaultFields(data, totalAccounts);
+    data = this.addDefaultFields(data, totalAccounts);
 
     const logEvent: LogEvent = {
       console_type: 'GEMINI_CLI',
