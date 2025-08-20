@@ -31,7 +31,13 @@ vi.mock('@google/gemini-cli-core', () => {
       return path.join('/test/home/', '.gemini', 'tmp', 'mocked_hash');
     }
     getHistoryFilePath(): string {
-      return path.join('/test/home/', '.gemini', 'tmp', 'mocked_hash', 'shell_history');
+      return path.join(
+        '/test/home/',
+        '.gemini',
+        'tmp',
+        'mocked_hash',
+        'shell_history',
+      );
     }
   }
   return {
