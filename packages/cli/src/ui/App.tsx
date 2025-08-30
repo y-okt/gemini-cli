@@ -110,6 +110,7 @@ import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from '../utils/events.js';
 import { SettingsContext } from './contexts/SettingsContext.js';
 import { isNarrowWidth } from './utils/isNarrowWidth.js';
+import { StaticRefreshContext } from './contexts/StaticRefreshContext.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 // Maximum number of queued messages to display in UI to prevent performance issues
@@ -698,18 +699,29 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
       } else if (
         keyMatchers[Command.TOGGLE_MARKDOWN_MODE]?.(key)
       ) {
-        // Toggle render mode of last markdown-capable message
-        const lastIndex = [...history]
-          .reverse()
-          .find((item) => item.text && (item.type === 'gemini' || item.type === 'gemini_content'))?.id;
+        console.log('toggle markdown mode');
+        // Search pending items first (most recent streaming message), then committed history
+        const allCandidates = [
+          ...pendingHistoryItems.slice().reverse(),
+          ...history.slice().reverse(),
+        ];
+        console.log('history', allCandidates);
 
-        if (lastIndex !== undefined) {
-          updateItem(lastIndex, (prev) => ({
+        const target = allCandidates.find(
+          (item) => item.text && (item.type === 'gemini' || item.type === 'gemini_content'),
+        );
+
+        if (target && (target as any).id !== undefined && (target as any).id !== 0) {
+          const id = (target as any).id as number;
+          updateItem(id, (prev) => ({
             renderMode:
               prev.renderMode === MarkdownRenderMode.Raw
                 ? MarkdownRenderMode.Rendered
                 : MarkdownRenderMode.Raw,
           }));
+
+          // Force Static component to refresh so toggled mode is displayed
+          refreshStatic();
         }
       } else if (
         keyMatchers[Command.TOGGLE_TOOL_DESCRIPTIONS](key)
@@ -769,6 +781,8 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
       isAuthenticating,
       cancelOngoingRequest,
       updateItem,
+      refreshStatic,
+      pendingHistoryItems,
     ],
   );
 
@@ -948,370 +962,372 @@ const App = ({ config, startupWarnings = [], version }: AppProps) => {
     : '  Type your message or @path/to/file';
 
   return (
-    <StreamingContext.Provider value={streamingState}>
-      <Box flexDirection="column" width="90%">
-        {/*
-         * The Static component is an Ink intrinsic in which there can only be 1 per application.
-         * Because of this restriction we're hacking it slightly by having a 'header' item here to
-         * ensure that it's statically rendered.
-         *
-         * Background on the Static Item: Anything in the Static component is written a single time
-         * to the console. Think of it like doing a console.log and then never using ANSI codes to
-         * clear that content ever again. Effectively it has a moving frame that every time new static
-         * content is set it'll flush content to the terminal and move the area which it's "clearing"
-         * down a notch. Without Static the area which gets erased and redrawn continuously grows.
-         */}
-        <Static
-          key={staticKey}
-          items={[
-            <Box flexDirection="column" key="header">
-              {!settings.merged.hideBanner && (
-                <Header version={version} nightly={nightly} />
-              )}
-              {!settings.merged.hideTips && <Tips config={config} />}
-            </Box>,
-            ...history.map((h) => (
-              <HistoryItemDisplay
-                terminalWidth={mainAreaWidth}
-                availableTerminalHeight={staticAreaMaxItemHeight}
-                key={h.id}
-                item={h}
-                isPending={false}
-                config={config}
-                commands={slashCommands}
-              />
-            )),
-          ]}
-        >
-          {(item) => item}
-        </Static>
-        <OverflowProvider>
-          <Box ref={pendingHistoryItemRef} flexDirection="column">
-            {pendingHistoryItems.map((item, i) => (
-              <HistoryItemDisplay
-                key={i}
-                availableTerminalHeight={
-                  constrainHeight ? availableTerminalHeight : undefined
-                }
-                terminalWidth={mainAreaWidth}
-                // TODO(taehykim): It seems like references to ids aren't necessary in
-                // HistoryItemDisplay. Refactor later. Use a fake id for now.
-                item={{ ...item, id: 0 }}
-                isPending={true}
-                config={config}
-                isFocused={!isEditorDialogOpen}
-              />
-            ))}
-            <ShowMoreLines constrainHeight={constrainHeight} />
-          </Box>
-        </OverflowProvider>
-
-        <Box flexDirection="column" ref={mainControlsRef}>
-          {/* Move UpdateNotification to render update notification above input area */}
-          {updateInfo && <UpdateNotification message={updateInfo.message} />}
-          {startupWarnings.length > 0 && (
-            <Box
-              borderStyle="round"
-              borderColor={Colors.AccentYellow}
-              paddingX={1}
-              marginY={1}
-              flexDirection="column"
-            >
-              {startupWarnings.map((warning, index) => (
-                <Text key={index} color={Colors.AccentYellow}>
-                  {warning}
-                </Text>
+    <StaticRefreshContext.Provider value={refreshStatic}>
+      <StreamingContext.Provider value={streamingState}>
+        <Box flexDirection="column" width="90%">
+          {/*
+           * The Static component is an Ink intrinsic in which there can only be 1 per application.
+           * Because of this restriction we're hacking it slightly by having a 'header' item here to
+           * ensure that it's statically rendered.
+           *
+           * Background on the Static Item: Anything in the Static component is written a single time
+           * to the console. Think of it like doing a console.log and then never using ANSI codes to
+           * clear that content ever again. Effectively it has a moving frame that every time new static
+           * content is set it'll flush content to the terminal and move the area which it's "clearing"
+           * down a notch. Without Static the area which gets erased and redrawn continuously grows.
+           */}
+          <Static
+            key={staticKey}
+            items={[
+              <Box flexDirection="column" key="header">
+                {!settings.merged.hideBanner && (
+                  <Header version={version} nightly={nightly} />
+                )}
+                {!settings.merged.hideTips && <Tips config={config} />}
+              </Box>,
+              ...history.map((h) => (
+                <HistoryItemDisplay
+                  terminalWidth={mainAreaWidth}
+                  availableTerminalHeight={staticAreaMaxItemHeight}
+                  key={h.id}
+                  item={h}
+                  isPending={false}
+                  config={config}
+                  commands={slashCommands}
+                />
+              )),
+            ]}
+          >
+            {(item) => item}
+          </Static>
+          <OverflowProvider>
+            <Box ref={pendingHistoryItemRef} flexDirection="column">
+              {pendingHistoryItems.map((item, i) => (
+                <HistoryItemDisplay
+                  key={i}
+                  availableTerminalHeight={
+                    constrainHeight ? availableTerminalHeight : undefined
+                  }
+                  terminalWidth={mainAreaWidth}
+                  // TODO(taehykim): It seems like references to ids aren't necessary in
+                  // HistoryItemDisplay. Refactor later. Use a fake id for now.
+                  item={{ ...item, id: 0 }}
+                  isPending={true}
+                  config={config}
+                  isFocused={!isEditorDialogOpen}
+                />
               ))}
+              <ShowMoreLines constrainHeight={constrainHeight} />
             </Box>
-          )}
+          </OverflowProvider>
 
-          {shouldShowIdePrompt && currentIDE ? (
-            <IdeIntegrationNudge
-              ide={currentIDE}
-              onComplete={handleIdePromptComplete}
-            />
-          ) : isFolderTrustDialogOpen ? (
-            <FolderTrustDialog onSelect={handleFolderTrustSelect} />
-          ) : shellConfirmationRequest ? (
-            <ShellConfirmationDialog request={shellConfirmationRequest} />
-          ) : confirmationRequest ? (
-            <Box flexDirection="column">
-              {confirmationRequest.prompt}
-              <Box paddingY={1}>
-                <RadioButtonSelect
-                  isFocused={!!confirmationRequest}
-                  items={[
-                    { label: 'Yes', value: true },
-                    { label: 'No', value: false },
-                  ]}
-                  onSelect={(value: boolean) => {
-                    confirmationRequest.onConfirm(value);
+          <Box flexDirection="column" ref={mainControlsRef}>
+            {/* Move UpdateNotification to render update notification above input area */}
+            {updateInfo && <UpdateNotification message={updateInfo.message} />}
+            {startupWarnings.length > 0 && (
+              <Box
+                borderStyle="round"
+                borderColor={Colors.AccentYellow}
+                paddingX={1}
+                marginY={1}
+                flexDirection="column"
+              >
+                {startupWarnings.map((warning, index) => (
+                  <Text key={index} color={Colors.AccentYellow}>
+                    {warning}
+                  </Text>
+                ))}
+              </Box>
+            )}
+
+            {shouldShowIdePrompt && currentIDE ? (
+              <IdeIntegrationNudge
+                ide={currentIDE}
+                onComplete={handleIdePromptComplete}
+              />
+            ) : isFolderTrustDialogOpen ? (
+              <FolderTrustDialog onSelect={handleFolderTrustSelect} />
+            ) : shellConfirmationRequest ? (
+              <ShellConfirmationDialog request={shellConfirmationRequest} />
+            ) : confirmationRequest ? (
+              <Box flexDirection="column">
+                {confirmationRequest.prompt}
+                <Box paddingY={1}>
+                  <RadioButtonSelect
+                    isFocused={!!confirmationRequest}
+                    items={[
+                      { label: 'Yes', value: true },
+                      { label: 'No', value: false },
+                    ]}
+                    onSelect={(value: boolean) => {
+                      confirmationRequest.onConfirm(value);
+                    }}
+                  />
+                </Box>
+              </Box>
+            ) : isThemeDialogOpen ? (
+              <Box flexDirection="column">
+                {themeError && (
+                  <Box marginBottom={1}>
+                    <Text color={Colors.AccentRed}>{themeError}</Text>
+                  </Box>
+                )}
+                <ThemeDialog
+                  onSelect={handleThemeSelect}
+                  onHighlight={handleThemeHighlight}
+                  settings={settings}
+                  availableTerminalHeight={
+                    constrainHeight
+                      ? terminalHeight - staticExtraHeight
+                      : undefined
+                  }
+                  terminalWidth={mainAreaWidth}
+                />
+              </Box>
+            ) : isSettingsDialogOpen ? (
+              <Box flexDirection="column">
+                <SettingsDialog
+                  settings={settings}
+                  onSelect={() => closeSettingsDialog()}
+                  onRestartRequest={() => process.exit(0)}
+                />
+              </Box>
+            ) : isAuthenticating ? (
+              <>
+                <AuthInProgress
+                  onTimeout={() => {
+                    setAuthError('Authentication timed out. Please try again.');
+                    cancelAuthentication();
+                    openAuthDialog();
                   }}
                 />
-              </Box>
-            </Box>
-          ) : isThemeDialogOpen ? (
-            <Box flexDirection="column">
-              {themeError && (
-                <Box marginBottom={1}>
-                  <Text color={Colors.AccentRed}>{themeError}</Text>
-                </Box>
-              )}
-              <ThemeDialog
-                onSelect={handleThemeSelect}
-                onHighlight={handleThemeHighlight}
-                settings={settings}
-                availableTerminalHeight={
-                  constrainHeight
-                    ? terminalHeight - staticExtraHeight
-                    : undefined
-                }
-                terminalWidth={mainAreaWidth}
-              />
-            </Box>
-          ) : isSettingsDialogOpen ? (
-            <Box flexDirection="column">
-              <SettingsDialog
-                settings={settings}
-                onSelect={() => closeSettingsDialog()}
-                onRestartRequest={() => process.exit(0)}
-              />
-            </Box>
-          ) : isAuthenticating ? (
-            <>
-              <AuthInProgress
-                onTimeout={() => {
-                  setAuthError('Authentication timed out. Please try again.');
-                  cancelAuthentication();
-                  openAuthDialog();
-                }}
-              />
-              {showErrorDetails && (
-                <OverflowProvider>
-                  <Box flexDirection="column">
-                    <DetailedMessagesDisplay
-                      messages={filteredConsoleMessages}
-                      maxHeight={
-                        constrainHeight ? debugConsoleMaxHeight : undefined
-                      }
-                      width={inputWidth}
-                    />
-                    <ShowMoreLines constrainHeight={constrainHeight} />
-                  </Box>
-                </OverflowProvider>
-              )}
-            </>
-          ) : isAuthDialogOpen ? (
-            <Box flexDirection="column">
-              <AuthDialog
-                onSelect={handleAuthSelect}
-                settings={settings}
-                initialErrorMessage={authError}
-              />
-            </Box>
-          ) : isEditorDialogOpen ? (
-            <Box flexDirection="column">
-              {editorError && (
-                <Box marginBottom={1}>
-                  <Text color={Colors.AccentRed}>{editorError}</Text>
-                </Box>
-              )}
-              <EditorSettingsDialog
-                onSelect={handleEditorSelect}
-                settings={settings}
-                onExit={exitEditorDialog}
-              />
-            </Box>
-          ) : showPrivacyNotice ? (
-            <PrivacyNotice
-              onExit={() => setShowPrivacyNotice(false)}
-              config={config}
-            />
-          ) : (
-            <>
-              <LoadingIndicator
-                thought={
-                  streamingState === StreamingState.WaitingForConfirmation ||
-                  config.getAccessibility()?.disableLoadingPhrases
-                    ? undefined
-                    : thought
-                }
-                currentLoadingPhrase={
-                  config.getAccessibility()?.disableLoadingPhrases
-                    ? undefined
-                    : currentLoadingPhrase
-                }
-                elapsedTime={elapsedTime}
-              />
-
-              {/* Display queued messages below loading indicator */}
-              {messageQueue.length > 0 && (
-                <Box flexDirection="column" marginTop={1}>
-                  {messageQueue
-                    .slice(0, MAX_DISPLAYED_QUEUED_MESSAGES)
-                    .map((message, index) => {
-                      // Ensure multi-line messages are collapsed for the preview.
-                      // Replace all whitespace (including newlines) with a single space.
-                      const preview = message.replace(/\s+/g, ' ');
-
-                      return (
-                        // Ensure the Box takes full width so truncation calculates correctly
-                        <Box key={index} paddingLeft={2} width="100%">
-                          {/* Use wrap="truncate" to ensure it fits the terminal width and doesn't wrap */}
-                          <Text dimColor wrap="truncate">
-                            {preview}
-                          </Text>
-                        </Box>
-                      );
-                    })}
-                  {messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (
-                    <Box paddingLeft={2}>
-                      <Text dimColor>
-                        ... (+
-                        {messageQueue.length -
-                          MAX_DISPLAYED_QUEUED_MESSAGES}{' '}
-                        more)
-                      </Text>
+                {showErrorDetails && (
+                  <OverflowProvider>
+                    <Box flexDirection="column">
+                      <DetailedMessagesDisplay
+                        messages={filteredConsoleMessages}
+                        maxHeight={
+                          constrainHeight ? debugConsoleMaxHeight : undefined
+                        }
+                        width={inputWidth}
+                      />
+                      <ShowMoreLines constrainHeight={constrainHeight} />
                     </Box>
-                  )}
-                </Box>
-              )}
+                  </OverflowProvider>
+                )}
+              </>
+            ) : isAuthDialogOpen ? (
+              <Box flexDirection="column">
+                <AuthDialog
+                  onSelect={handleAuthSelect}
+                  settings={settings}
+                  initialErrorMessage={authError}
+                />
+              </Box>
+            ) : isEditorDialogOpen ? (
+              <Box flexDirection="column">
+                {editorError && (
+                  <Box marginBottom={1}>
+                    <Text color={Colors.AccentRed}>{editorError}</Text>
+                  </Box>
+                )}
+                <EditorSettingsDialog
+                  onSelect={handleEditorSelect}
+                  settings={settings}
+                  onExit={exitEditorDialog}
+                />
+              </Box>
+            ) : showPrivacyNotice ? (
+              <PrivacyNotice
+                onExit={() => setShowPrivacyNotice(false)}
+                config={config}
+              />
+            ) : (
+              <>
+                <LoadingIndicator
+                  thought={
+                    streamingState === StreamingState.WaitingForConfirmation ||
+                    config.getAccessibility()?.disableLoadingPhrases
+                      ? undefined
+                      : thought
+                  }
+                  currentLoadingPhrase={
+                    config.getAccessibility()?.disableLoadingPhrases
+                      ? undefined
+                      : currentLoadingPhrase
+                  }
+                  elapsedTime={elapsedTime}
+                />
 
-              <Box
-                marginTop={1}
-                justifyContent="space-between"
-                width="100%"
-                flexDirection={isNarrow ? 'column' : 'row'}
-                alignItems={isNarrow ? 'flex-start' : 'center'}
-              >
-                <Box>
-                  {process.env['GEMINI_SYSTEM_MD'] && (
-                    <Text color={Colors.AccentRed}>|⌐■_■| </Text>
-                  )}
-                  {ctrlCPressedOnce ? (
-                    <Text color={Colors.AccentYellow}>
-                      Press Ctrl+C again to exit.
-                    </Text>
-                  ) : ctrlDPressedOnce ? (
-                    <Text color={Colors.AccentYellow}>
-                      Press Ctrl+D again to exit.
-                    </Text>
-                  ) : showEscapePrompt ? (
-                    <Text color={Colors.Gray}>Press Esc again to clear.</Text>
-                  ) : (
-                    <ContextSummaryDisplay
-                      ideContext={ideContextState}
-                      geminiMdFileCount={geminiMdFileCount}
-                      contextFileNames={contextFileNames}
-                      mcpServers={config.getMcpServers()}
-                      blockedMcpServers={config.getBlockedMcpServers()}
-                      showToolDescriptions={showToolDescriptions}
-                    />
-                  )}
-                </Box>
-                <Box paddingTop={isNarrow ? 1 : 0}>
-                  {showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                    !shellModeActive && (
-                      <AutoAcceptIndicator
-                        approvalMode={showAutoAcceptIndicator}
+                {/* Display queued messages below loading indicator */}
+                {messageQueue.length > 0 && (
+                  <Box flexDirection="column" marginTop={1}>
+                    {messageQueue
+                      .slice(0, MAX_DISPLAYED_QUEUED_MESSAGES)
+                      .map((message, index) => {
+                        // Ensure multi-line messages are collapsed for the preview.
+                        // Replace all whitespace (including newlines) with a single space.
+                        const preview = message.replace(/\s+/g, ' ');
+
+                        return (
+                          // Ensure the Box takes full width so truncation calculates correctly
+                          <Box key={index} paddingLeft={2} width="100%">
+                            {/* Use wrap="truncate" to ensure it fits the terminal width and doesn't wrap */}
+                            <Text dimColor wrap="truncate">
+                              {preview}
+                            </Text>
+                          </Box>
+                        );
+                      })}
+                    {messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (
+                      <Box paddingLeft={2}>
+                        <Text dimColor>
+                          ... (+
+                          {messageQueue.length -
+                            MAX_DISPLAYED_QUEUED_MESSAGES}{' '}
+                          more)
+                        </Text>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+
+                <Box
+                  marginTop={1}
+                  justifyContent="space-between"
+                  width="100%"
+                  flexDirection={isNarrow ? 'column' : 'row'}
+                  alignItems={isNarrow ? 'flex-start' : 'center'}
+                >
+                  <Box>
+                    {process.env['GEMINI_SYSTEM_MD'] && (
+                      <Text color={Colors.AccentRed}>|⌐■_■| </Text>
+                    )}
+                    {ctrlCPressedOnce ? (
+                      <Text color={Colors.AccentYellow}>
+                        Press Ctrl+C again to exit.
+                      </Text>
+                    ) : ctrlDPressedOnce ? (
+                      <Text color={Colors.AccentYellow}>
+                        Press Ctrl+D again to exit.
+                      </Text>
+                    ) : showEscapePrompt ? (
+                      <Text color={Colors.Gray}>Press Esc again to clear.</Text>
+                    ) : (
+                      <ContextSummaryDisplay
+                        ideContext={ideContextState}
+                        geminiMdFileCount={geminiMdFileCount}
+                        contextFileNames={contextFileNames}
+                        mcpServers={config.getMcpServers()}
+                        blockedMcpServers={config.getBlockedMcpServers()}
+                        showToolDescriptions={showToolDescriptions}
                       />
                     )}
-                  {shellModeActive && <ShellModeIndicator />}
-                </Box>
-              </Box>
-
-              {showErrorDetails && (
-                <OverflowProvider>
-                  <Box flexDirection="column">
-                    <DetailedMessagesDisplay
-                      messages={filteredConsoleMessages}
-                      maxHeight={
-                        constrainHeight ? debugConsoleMaxHeight : undefined
-                      }
-                      width={inputWidth}
-                    />
-                    <ShowMoreLines constrainHeight={constrainHeight} />
                   </Box>
-                </OverflowProvider>
-              )}
+                  <Box paddingTop={isNarrow ? 1 : 0}>
+                    {showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
+                      !shellModeActive && (
+                        <AutoAcceptIndicator
+                          approvalMode={showAutoAcceptIndicator}
+                        />
+                      )}
+                    {shellModeActive && <ShellModeIndicator />}
+                  </Box>
+                </Box>
 
-              {isInputActive && (
-                <InputPrompt
-                  buffer={buffer}
-                  inputWidth={inputWidth}
-                  suggestionsWidth={suggestionsWidth}
-                  onSubmit={handleFinalSubmit}
-                  userMessages={userMessages}
-                  onClearScreen={handleClearScreen}
-                  config={config}
-                  slashCommands={slashCommands}
-                  commandContext={commandContext}
-                  shellModeActive={shellModeActive}
-                  setShellModeActive={setShellModeActive}
-                  onEscapePromptChange={handleEscapePromptChange}
-                  focus={isFocused}
-                  vimHandleInput={vimHandleInput}
-                  placeholder={placeholder}
-                />
-              )}
-            </>
-          )}
+                {showErrorDetails && (
+                  <OverflowProvider>
+                    <Box flexDirection="column">
+                      <DetailedMessagesDisplay
+                        messages={filteredConsoleMessages}
+                        maxHeight={
+                          constrainHeight ? debugConsoleMaxHeight : undefined
+                        }
+                        width={inputWidth}
+                      />
+                      <ShowMoreLines constrainHeight={constrainHeight} />
+                    </Box>
+                  </OverflowProvider>
+                )}
 
-          {initError && streamingState !== StreamingState.Responding && (
-            <Box
-              borderStyle="round"
-              borderColor={Colors.AccentRed}
-              paddingX={1}
-              marginBottom={1}
-            >
-              {history.find(
-                (item) =>
-                  item.type === 'error' && item.text?.includes(initError),
-              )?.text ? (
-                <Text color={Colors.AccentRed}>
-                  {
-                    history.find(
-                      (item) =>
-                        item.type === 'error' && item.text?.includes(initError),
-                    )?.text
-                  }
-                </Text>
-              ) : (
-                <>
+                {isInputActive && (
+                  <InputPrompt
+                    buffer={buffer}
+                    inputWidth={inputWidth}
+                    suggestionsWidth={suggestionsWidth}
+                    onSubmit={handleFinalSubmit}
+                    userMessages={userMessages}
+                    onClearScreen={handleClearScreen}
+                    config={config}
+                    slashCommands={slashCommands}
+                    commandContext={commandContext}
+                    shellModeActive={shellModeActive}
+                    setShellModeActive={setShellModeActive}
+                    onEscapePromptChange={handleEscapePromptChange}
+                    focus={isFocused}
+                    vimHandleInput={vimHandleInput}
+                    placeholder={placeholder}
+                  />
+                )}
+              </>
+            )}
+
+            {initError && streamingState !== StreamingState.Responding && (
+              <Box
+                borderStyle="round"
+                borderColor={Colors.AccentRed}
+                paddingX={1}
+                marginBottom={1}
+              >
+                {history.find(
+                  (item) =>
+                    item.type === 'error' && item.text?.includes(initError),
+                )?.text ? (
                   <Text color={Colors.AccentRed}>
-                    Initialization Error: {initError}
+                    {
+                      history.find(
+                        (item) =>
+                          item.type === 'error' && item.text?.includes(initError),
+                      )?.text
+                    }
                   </Text>
-                  <Text color={Colors.AccentRed}>
-                    {' '}
-                    Please check API key and configuration.
-                  </Text>
-                </>
-              )}
-            </Box>
-          )}
-          {!settings.merged.hideFooter && (
-            <Footer
-              model={currentModel}
-              targetDir={config.getTargetDir()}
-              debugMode={config.getDebugMode()}
-              branchName={branchName}
-              debugMessage={debugMessage}
-              corgiMode={corgiMode}
-              errorCount={errorCount}
-              showErrorDetails={showErrorDetails}
-              showMemoryUsage={
-                config.getDebugMode() ||
-                settings.merged.showMemoryUsage ||
-                false
-              }
-              promptTokenCount={sessionStats.lastPromptTokenCount}
-              nightly={nightly}
-              vimMode={vimModeEnabled ? vimMode : undefined}
-              isTrustedFolder={isTrustedFolderState}
-            />
-          )}
+                ) : (
+                  <>
+                    <Text color={Colors.AccentRed}>
+                      Initialization Error: {initError}
+                    </Text>
+                    <Text color={Colors.AccentRed}>
+                      {' '}
+                      Please check API key and configuration.
+                    </Text>
+                  </>
+                )}
+              </Box>
+            )}
+            {!settings.merged.hideFooter && (
+              <Footer
+                model={currentModel}
+                targetDir={config.getTargetDir()}
+                debugMode={config.getDebugMode()}
+                branchName={branchName}
+                debugMessage={debugMessage}
+                corgiMode={corgiMode}
+                errorCount={errorCount}
+                showErrorDetails={showErrorDetails}
+                showMemoryUsage={
+                  config.getDebugMode() ||
+                  settings.merged.showMemoryUsage ||
+                  false
+                }
+                promptTokenCount={sessionStats.lastPromptTokenCount}
+                nightly={nightly}
+                vimMode={vimModeEnabled ? vimMode : undefined}
+                isTrustedFolder={isTrustedFolderState}
+              />
+            )}
+          </Box>
         </Box>
-      </Box>
-    </StreamingContext.Provider>
+      </StreamingContext.Provider>
+    </StaticRefreshContext.Provider>
   );
 };

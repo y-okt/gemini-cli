@@ -65,7 +65,6 @@ export enum MarkdownRenderMode {
 
 export interface HistoryItemBase {
   text?: string; // Text content for user/gemini/info/error messages
-  /** Optional per-message markdown render mode. Defaults to Rendered. */
   renderMode?: MarkdownRenderMode;
 }
 

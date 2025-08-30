@@ -60,6 +60,10 @@ describe('keyMatchers', () => {
       key.name === 'return' && !key.ctrl,
     [Command.ACCEPT_SUGGESTION_REVERSE_SEARCH]: (key: Key) =>
       key.name === 'tab',
+
+    // Markdown toggle shortcut (Ctrl+Shift+M)
+    [Command.TOGGLE_MARKDOWN_MODE]: (key: Key) =>
+      (key.ctrl && key.name === 'm')
   };
 
   // Test data for each command with positive and negative test cases

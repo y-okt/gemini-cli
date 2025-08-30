@@ -9,6 +9,10 @@ import { Box, Text } from 'ink';
 import { DiffRenderer } from './DiffRenderer.js';
 import { Colors } from '../../colors.js';
 import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
+import { keyMatchers, Command } from '../../keyMatchers.js';
+import { MarkdownRenderMode } from '../../types.js';
+import { formatRawText } from '../../utils/formatRawText.js';
+import { useStaticRefresh } from '../../contexts/StaticRefreshContext.js';
 import {
   ToolCallConfirmationDetails,
   ToolConfirmationOutcome,
@@ -41,6 +45,12 @@ export const ToolConfirmationMessage: React.FC<
   terminalWidth,
 }) => {
   const { onConfirm } = confirmationDetails;
+
+  const [renderMode, setRenderMode] = React.useState<MarkdownRenderMode>(
+    MarkdownRenderMode.Rendered,
+  );
+
+  const refreshStatic = useStaticRefresh();
   const childWidth = terminalWidth - 2; // 2 for padding
 
   const handleConfirm = async (outcome: ToolConfirmationOutcome) => {
@@ -61,6 +71,18 @@ export const ToolConfirmationMessage: React.FC<
   useKeypress(
     (key) => {
       if (!isFocused) return;
+
+      if (keyMatchers[Command.TOGGLE_MARKDOWN_MODE]?.(key)) {
+        setRenderMode((prev) =>
+          prev === MarkdownRenderMode.Raw
+            ? MarkdownRenderMode.Rendered
+            : MarkdownRenderMode.Raw,
+        );
+        // request static refresh
+        setTimeout(() => refreshStatic(), 0);
+        return;
+      }
+
       if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
         handleConfirm(ToolConfirmationOutcome.Cancel);
       }
@@ -153,14 +175,29 @@ export const ToolConfirmationMessage: React.FC<
       });
     }
 
-    bodyContent = (
-      <DiffRenderer
-        diffContent={confirmationDetails.fileDiff}
-        filename={confirmationDetails.fileName}
-        availableTerminalHeight={availableBodyContentHeight()}
-        terminalWidth={childWidth}
-      />
-    );
+    if (renderMode === MarkdownRenderMode.Rendered) {
+      bodyContent = (
+        <DiffRenderer
+          diffContent={confirmationDetails.fileDiff}
+          filename={confirmationDetails.fileName}
+          availableTerminalHeight={availableBodyContentHeight()}
+          terminalWidth={childWidth}
+        />
+      );
+    } else {
+      bodyContent = (
+        <Box paddingX={1} marginLeft={1}>
+          <MaxSizedBox
+            maxHeight={availableBodyContentHeight()}
+            maxWidth={Math.max(childWidth - 4, 1)}
+          >
+            <Text wrap="wrap">
+              {formatRawText(confirmationDetails.fileDiff, renderMode)}
+            </Text>
+          </MaxSizedBox>
+        </Box>
+      );
+    }
   } else if (confirmationDetails.type === 'exec') {
     const executionProps =
       confirmationDetails as ToolExecuteConfirmationDetails;
@@ -224,7 +261,9 @@ export const ToolConfirmationMessage: React.FC<
     bodyContent = (
       <Box flexDirection="column" paddingX={1} marginLeft={1}>
         <Text color={Colors.AccentCyan}>
-          <RenderInline text={infoProps.prompt} />
+          {renderMode === MarkdownRenderMode.Rendered
+            ? <RenderInline text={infoProps.prompt} />
+            : formatRawText(infoProps.prompt, renderMode)}
         </Text>
         {displayUrls && infoProps.urls && infoProps.urls.length > 0 && (
           <Box flexDirection="column" marginTop={1}>

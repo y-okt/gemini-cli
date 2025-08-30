@@ -8,8 +8,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
 import { MarkdownRenderMode } from '../../types.js';
-import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
-import { formatMarkdown } from '../../utils/formatMarkdown.js';
+import { formatRawText } from '../../utils/formatRawText.js';
 
 interface GeminiMessageContentProps {
   text: string;
@@ -45,7 +44,7 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
           terminalWidth={terminalWidth}
         />
       ) : (
-        <Text wrap="wrap">{formatMarkdown(text, renderMode)}</Text>
+        <Text wrap="wrap">{formatRawText(text, renderMode)}</Text>
       )}
     </Box>
   );

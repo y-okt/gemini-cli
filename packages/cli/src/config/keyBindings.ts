@@ -125,7 +125,6 @@ export const defaultKeyBindings: KeyBindingConfig = {
 
   // Auto-completion
   // Original: key.name === 'tab' || (key.name === 'return' && !key.ctrl)
-  // Must also exclude shift to allow shift+enter for newline
   [Command.ACCEPT_SUGGESTION]: [{ key: 'tab' }, { key: 'return', ctrl: false }],
   // Completion navigation (arrow or Ctrl+P/N)
   [Command.COMPLETION_UP]: [{ key: 'up' }, { key: 'p', ctrl: true }],
@@ -186,6 +185,8 @@ export const defaultKeyBindings: KeyBindingConfig = {
   // Original: key.name === 'tab'
   [Command.ACCEPT_SUGGESTION_REVERSE_SEARCH]: [{ key: 'tab' }],
 
-  // Markdown toggle binding Ctrl+Shift+M
-  [Command.TOGGLE_MARKDOWN_MODE]: [{ key: 'm', ctrl: true, shift: true }],
+  // Markdown toggle binding Ctrl+f
+  [Command.TOGGLE_MARKDOWN_MODE]: [
+    { key: 'f', ctrl: true },
+  ],
 };
