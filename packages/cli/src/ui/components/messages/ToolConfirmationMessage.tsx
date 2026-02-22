@@ -5,7 +5,7 @@
  */
 
 import type React from 'react';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import { DiffRenderer } from './DiffRenderer.js';
 import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
@@ -64,6 +64,8 @@ export const ToolConfirmationMessage: React.FC<
   terminalWidth,
 }) => {
   const { confirm, isDiffingEnabled } = useToolActions();
+  const [isMcpToolDetailsExpanded, setIsMcpToolDetailsExpanded] =
+    useState(false);
 
   const settings = useSettings();
   const allowPermanentApproval =
@@ -86,9 +88,78 @@ export const ToolConfirmationMessage: React.FC<
     [confirm, callId],
   );
 
+  useEffect(() => {
+    setIsMcpToolDetailsExpanded(false);
+  }, [callId]);
+
+  const mcpToolDetailsText = useMemo(() => {
+    if (confirmationDetails.type !== 'mcp') {
+      return null;
+    }
+
+    const detailsLines: string[] = [];
+    if (confirmationDetails.toolArgs !== undefined) {
+      let argsText: string;
+      try {
+        argsText = stripUnsafeCharacters(
+          JSON.stringify(confirmationDetails.toolArgs, null, 2),
+        );
+      } catch {
+        argsText = '[unserializable arguments]';
+      }
+      detailsLines.push('Invocation Arguments:');
+      detailsLines.push(argsText);
+    }
+
+    const description = confirmationDetails.toolDescription?.trim();
+    if (description) {
+      if (detailsLines.length > 0) {
+        detailsLines.push('');
+      }
+      detailsLines.push('Description:');
+      detailsLines.push(description);
+    }
+
+    if (confirmationDetails.toolParameterSchema !== undefined) {
+      let schemaText: string;
+      try {
+        schemaText = stripUnsafeCharacters(
+          JSON.stringify(confirmationDetails.toolParameterSchema, null, 2),
+        );
+      } catch {
+        schemaText = '[unserializable schema]';
+      }
+      if (detailsLines.length > 0) {
+        detailsLines.push('');
+      }
+      detailsLines.push('Input Schema:');
+      detailsLines.push(schemaText);
+    }
+
+    if (detailsLines.length === 0) {
+      return null;
+    }
+
+    return detailsLines.join('\n');
+  }, [confirmationDetails]);
+
+  const hasMcpToolDetails = !!mcpToolDetailsText;
+
   useKeypress(
     (key) => {
       if (!isFocused) return false;
+      if (
+        confirmationDetails.type === 'mcp' &&
+        hasMcpToolDetails &&
+        key.name?.toLowerCase() === 'e' &&
+        !key.ctrl &&
+        !key.alt &&
+        !key.cmd &&
+        !key.shift
+      ) {
+        setIsMcpToolDetailsExpanded((expanded) => !expanded);
+        return true;
+      }
       if (keyMatchers[Command.ESCAPE](key)) {
         handleConfirm(ToolConfirmationOutcome.Cancel);
         return true;
@@ -504,12 +575,33 @@ export const ToolConfirmationMessage: React.FC<
 
       bodyContent = (
         <Box flexDirection="column">
-          <Text color={theme.text.link}>
-            MCP Server: {sanitizeForDisplay(mcpProps.serverName)}
-          </Text>
-          <Text color={theme.text.link}>
-            Tool: {sanitizeForDisplay(mcpProps.toolName)}
-          </Text>
+          {hasMcpToolDetails && (
+            <Box flexDirection="column">
+              <Text color={theme.text.primary}>MCP Tool Details:</Text>
+              {isMcpToolDetailsExpanded ? (
+                <>
+                  <Text color={theme.text.link}>{mcpToolDetailsText}</Text>
+                  <Text color={theme.text.secondary}>
+                    (press &apos;e&apos; to collapse MCP tool details)
+                  </Text>
+                </>
+              ) : (
+                <Text color={theme.text.secondary}>
+                  (press &apos;e&apos; to expand MCP tool details)
+                </Text>
+              )}
+            </Box>
+          )}
+          {!hasMcpToolDetails && (
+            <>
+              <Text color={theme.text.link}>
+                MCP Server: {sanitizeForDisplay(mcpProps.serverName)}
+              </Text>
+              <Text color={theme.text.link}>
+                Tool: {sanitizeForDisplay(mcpProps.toolName)}
+              </Text>
+            </>
+          )}
         </Box>
       );
     }
@@ -522,7 +614,15 @@ export const ToolConfirmationMessage: React.FC<
     terminalWidth,
     handleConfirm,
     deceptiveUrlWarningText,
+    isMcpToolDetailsExpanded,
+    hasMcpToolDetails,
+    mcpToolDetailsText,
   ]);
+
+  const bodyOverflowDirection: 'top' | 'bottom' =
+    confirmationDetails.type === 'mcp' && isMcpToolDetailsExpanded
+      ? 'bottom'
+      : 'top';
 
   if (confirmationDetails.type === 'edit') {
     if (confirmationDetails.isModifying) {
@@ -559,7 +659,7 @@ export const ToolConfirmationMessage: React.FC<
             <MaxSizedBox
               maxHeight={availableBodyContentHeight()}
               maxWidth={terminalWidth}
-              overflowDirection="top"
+              overflowDirection={bodyOverflowDirection}
             >
               {bodyContent}
             </MaxSizedBox>
