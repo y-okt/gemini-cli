@@ -352,6 +352,16 @@ describe('keyMatchers', () => {
         createKey('l', { ctrl: true }),
       ],
     },
+    {
+      command: Command.EXPAND_DETAILS,
+      positive: [createKey('e')],
+      negative: [
+        createKey('e', { ctrl: true }),
+        createKey('e', { alt: true }),
+        createKey('e', { cmd: true }),
+        createKey('e', { shift: true }),
+      ],
+    },
 
     // Shell commands
     {

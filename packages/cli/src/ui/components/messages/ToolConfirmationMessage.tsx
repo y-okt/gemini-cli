@@ -29,6 +29,7 @@ import { useKeypress } from '../../hooks/useKeypress.js';
 import { theme } from '../../semantic-colors.js';
 import { useSettings } from '../../contexts/SettingsContext.js';
 import { keyMatchers, Command } from '../../keyMatchers.js';
+import { formatCommand } from '../../utils/keybindingUtils.js';
 import {
   REDIRECTION_WARNING_NOTE_LABEL,
   REDIRECTION_WARNING_NOTE_TEXT,
@@ -117,7 +118,7 @@ export const ToolConfirmationMessage: React.FC<
         detailsLines.push('');
       }
       detailsLines.push('Description:');
-      detailsLines.push(description);
+      detailsLines.push(stripUnsafeCharacters(description));
     }
 
     if (confirmationDetails.toolParameterSchema !== undefined) {
@@ -144,6 +145,9 @@ export const ToolConfirmationMessage: React.FC<
   }, [confirmationDetails]);
 
   const hasMcpToolDetails = !!mcpToolDetailsText;
+  const expandDetailsHintKey = formatCommand(
+    Command.EXPAND_DETAILS,
+  ).toLowerCase();
 
   useKeypress(
     (key) => {
@@ -151,11 +155,7 @@ export const ToolConfirmationMessage: React.FC<
       if (
         confirmationDetails.type === 'mcp' &&
         hasMcpToolDetails &&
-        key.name?.toLowerCase() === 'e' &&
-        !key.ctrl &&
-        !key.alt &&
-        !key.cmd &&
-        !key.shift
+        keyMatchers[Command.EXPAND_DETAILS](key)
       ) {
         setIsMcpToolDetailsExpanded((expanded) => !expanded);
         return true;
@@ -575,32 +575,30 @@ export const ToolConfirmationMessage: React.FC<
 
       bodyContent = (
         <Box flexDirection="column">
+          <>
+            <Text color={theme.text.link}>
+              MCP Server: {sanitizeForDisplay(mcpProps.serverName)}
+            </Text>
+            <Text color={theme.text.link}>
+              Tool: {sanitizeForDisplay(mcpProps.toolName)}
+            </Text>
+          </>
           {hasMcpToolDetails && (
-            <Box flexDirection="column">
+            <Box flexDirection="column" marginTop={1}>
               <Text color={theme.text.primary}>MCP Tool Details:</Text>
               {isMcpToolDetailsExpanded ? (
                 <>
-                  <Text color={theme.text.link}>{mcpToolDetailsText}</Text>
                   <Text color={theme.text.secondary}>
-                    (press &apos;e&apos; to collapse MCP tool details)
+                    (press {expandDetailsHintKey} to collapse MCP tool details)
                   </Text>
+                  <Text color={theme.text.link}>{mcpToolDetailsText}</Text>
                 </>
               ) : (
                 <Text color={theme.text.secondary}>
-                  (press &apos;e&apos; to expand MCP tool details)
+                  (press {expandDetailsHintKey} to expand MCP tool details)
                 </Text>
               )}
             </Box>
-          )}
-          {!hasMcpToolDetails && (
-            <>
-              <Text color={theme.text.link}>
-                MCP Server: {sanitizeForDisplay(mcpProps.serverName)}
-              </Text>
-              <Text color={theme.text.link}>
-                Tool: {sanitizeForDisplay(mcpProps.toolName)}
-              </Text>
-            </>
           )}
         </Box>
       );
@@ -617,6 +615,7 @@ export const ToolConfirmationMessage: React.FC<
     isMcpToolDetailsExpanded,
     hasMcpToolDetails,
     mcpToolDetailsText,
+    expandDetailsHintKey,
   ]);
 
   const bodyOverflowDirection: 'top' | 'bottom' =

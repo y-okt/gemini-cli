@@ -558,7 +558,7 @@ describe('ToolConfirmationMessage', () => {
 
     const output = lastFrame();
     expect(output).toContain('MCP Tool Details:');
-    expect(output).toContain("(press 'e' to expand MCP tool details)");
+    expect(output).toContain('(press E to expand MCP tool details)');
     expect(output).not.toContain('https://www.google.co.jp');
     expect(output).not.toContain('Navigates browser to a URL.');
     unmount();
