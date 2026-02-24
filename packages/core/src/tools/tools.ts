@@ -820,6 +820,7 @@ export enum Kind {
   Fetch = 'fetch',
   Communicate = 'communicate',
   Plan = 'plan',
+  SwitchMode = 'switch_mode',
   Other = 'other',
 }
 
