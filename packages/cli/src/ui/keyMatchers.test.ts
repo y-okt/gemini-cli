@@ -352,17 +352,6 @@ describe('keyMatchers', () => {
         createKey('l', { ctrl: true }),
       ],
     },
-    {
-      command: Command.EXPAND_DETAILS,
-      positive: [createKey('o', { ctrl: true })],
-      negative: [
-        createKey('o'),
-        createKey('o', { alt: true }),
-        createKey('o', { cmd: true }),
-        createKey('o', { shift: true }),
-      ],
-    },
-
     // Shell commands
     {
       command: Command.REVERSE_SEARCH,

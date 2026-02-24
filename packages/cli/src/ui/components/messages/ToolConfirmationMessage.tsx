@@ -157,7 +157,7 @@ export const ToolConfirmationMessage: React.FC<
   }, [confirmationDetails]);
 
   const hasMcpToolDetails = !!mcpToolDetailsText;
-  const expandDetailsHintKey = formatCommand(Command.EXPAND_DETAILS);
+  const expandDetailsHintKey = formatCommand(Command.SHOW_MORE_LINES);
 
   useKeypress(
     (key) => {
@@ -165,7 +165,7 @@ export const ToolConfirmationMessage: React.FC<
       if (
         confirmationDetails.type === 'mcp' &&
         hasMcpToolDetails &&
-        keyMatchers[Command.EXPAND_DETAILS](key)
+        keyMatchers[Command.SHOW_MORE_LINES](key)
       ) {
         setMcpDetailsExpansionState({
           callId,
