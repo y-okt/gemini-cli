@@ -354,12 +354,12 @@ describe('keyMatchers', () => {
     },
     {
       command: Command.EXPAND_DETAILS,
-      positive: [createKey('e')],
+      positive: [createKey('o', { ctrl: true })],
       negative: [
-        createKey('e', { ctrl: true }),
-        createKey('e', { alt: true }),
-        createKey('e', { cmd: true }),
-        createKey('e', { shift: true }),
+        createKey('o'),
+        createKey('o', { alt: true }),
+        createKey('o', { cmd: true }),
+        createKey('o', { shift: true }),
       ],
     },
 

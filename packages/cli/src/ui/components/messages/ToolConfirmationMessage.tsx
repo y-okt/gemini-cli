@@ -5,7 +5,7 @@
  */
 
 import type React from 'react';
-import { useMemo, useCallback, useEffect, useState } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { Box, Text } from 'ink';
 import { DiffRenderer } from './DiffRenderer.js';
 import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
@@ -65,8 +65,17 @@ export const ToolConfirmationMessage: React.FC<
   terminalWidth,
 }) => {
   const { confirm, isDiffingEnabled } = useToolActions();
-  const [isMcpToolDetailsExpanded, setIsMcpToolDetailsExpanded] =
-    useState(false);
+  const [mcpDetailsExpansionState, setMcpDetailsExpansionState] = useState<{
+    callId: string;
+    expanded: boolean;
+  }>({
+    callId,
+    expanded: false,
+  });
+  const isMcpToolDetailsExpanded =
+    mcpDetailsExpansionState.callId === callId
+      ? mcpDetailsExpansionState.expanded
+      : false;
 
   const settings = useSettings();
   const allowPermanentApproval =
@@ -89,17 +98,20 @@ export const ToolConfirmationMessage: React.FC<
     [confirm, callId],
   );
 
-  useEffect(() => {
-    setIsMcpToolDetailsExpanded(false);
-  }, [callId]);
-
   const mcpToolDetailsText = useMemo(() => {
     if (confirmationDetails.type !== 'mcp') {
       return null;
     }
 
     const detailsLines: string[] = [];
-    if (confirmationDetails.toolArgs !== undefined) {
+    const hasNonEmptyToolArgs =
+      confirmationDetails.toolArgs !== undefined &&
+      !(
+        typeof confirmationDetails.toolArgs === 'object' &&
+        confirmationDetails.toolArgs !== null &&
+        Object.keys(confirmationDetails.toolArgs).length === 0
+      );
+    if (hasNonEmptyToolArgs) {
       let argsText: string;
       try {
         argsText = stripUnsafeCharacters(
@@ -145,9 +157,7 @@ export const ToolConfirmationMessage: React.FC<
   }, [confirmationDetails]);
 
   const hasMcpToolDetails = !!mcpToolDetailsText;
-  const expandDetailsHintKey = formatCommand(
-    Command.EXPAND_DETAILS,
-  ).toLowerCase();
+  const expandDetailsHintKey = formatCommand(Command.EXPAND_DETAILS);
 
   useKeypress(
     (key) => {
@@ -157,7 +167,10 @@ export const ToolConfirmationMessage: React.FC<
         hasMcpToolDetails &&
         keyMatchers[Command.EXPAND_DETAILS](key)
       ) {
-        setIsMcpToolDetailsExpanded((expanded) => !expanded);
+        setMcpDetailsExpansionState({
+          callId,
+          expanded: !isMcpToolDetailsExpanded,
+        });
         return true;
       }
       if (keyMatchers[Command.ESCAPE](key)) {
@@ -171,7 +184,7 @@ export const ToolConfirmationMessage: React.FC<
       }
       return false;
     },
-    { isActive: isFocused },
+    { isActive: isFocused, priority: true },
   );
 
   const handleSelect = useCallback(
